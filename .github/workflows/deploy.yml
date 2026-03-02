@@ -1,4 +1,4 @@
-name: Deploy Faraiz Backend to Oracle
+name: Deploy Backend to Oracle VM
 
 on:
   push:
@@ -8,35 +8,26 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
-
         with:
           host: ${{ secrets.ORACLE_HOST }}
           username: ${{ secrets.ORACLE_USER }}
           key: ${{ secrets.ORACLE_SSH_KEY }}
-
           script: |
-
             echo "Starting deployment..."
-
-            cd ~/Faraiz-app
-
+            # Ensure folder matches your Oracle VM path (Linux is case-sensitive!)
+            cd ~/Faraiz-app || cd ~/faraiz-app
+            
             git pull origin main
-
-            echo "Installing dependencies..."
-
+            
             cd backend
-
             source venv/bin/activate
-
             pip install -r requirements.txt
-
+            
             echo "Restarting backend service..."
-
+            # Assumes your systemd service is named 'faraiz'
             sudo systemctl restart faraiz
-
-            echo "Deployment completed"
+            
+            echo "Deployment completed successfully!"

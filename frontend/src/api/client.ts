@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { CalculationRequest, CalculationResponse } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://faraiz-app-30329963187.asia-south1.run.app/api';
 
 export const calculateInheritance = async (data: CalculationRequest): Promise<CalculationResponse> => {
     const response = await axios.post(`${API_URL}/calculate`, data);

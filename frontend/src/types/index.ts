@@ -27,6 +27,13 @@ export interface VerificationData {
     status: 'VALID' | 'INVALID';
 }
 
+export interface CalculationRequest {
+    estate_value: number;
+    debts: number;
+    wasiyyah: number;
+    heirs: HeirInput[];
+}
+
 export interface CalculationResponse {
     results: CalculationResult[];
     verification: VerificationData;

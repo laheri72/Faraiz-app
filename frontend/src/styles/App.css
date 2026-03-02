@@ -1,0 +1,246 @@
+:root {
+  --primary: #1e3a8a;
+  --primary-light: #3b82f6;
+  --secondary: #64748b;
+  --bg: #f8fafc;
+  --white: #ffffff;
+  --text: #1e293b;
+  --border: #e2e8f0;
+  --danger: #ef4444;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+}
+
+.container {
+  max-width: 800px;
+  width: 100%;
+  background: var(--white);
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  color: var(--primary);
+}
+
+.subtitle {
+  color: var(--secondary);
+  margin-bottom: 2rem;
+}
+
+/* Selection Grid */
+.selection-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 600px) {
+  .selection-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.list {
+  background: #f1f5f9;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  min-height: 300px;
+}
+
+.heir-item, .selected-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.heir-item:hover {
+  border-color: var(--primary-light);
+  transform: translateY(-2px);
+}
+
+.icon {
+  color: var(--primary-light);
+}
+
+.selected-item {
+  cursor: default;
+}
+
+.count-badge {
+  background: var(--primary);
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  margin-right: 0.5rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-icon {
+  cursor: pointer;
+  color: var(--primary-light);
+}
+
+.action-icon.remove {
+  color: var(--danger);
+}
+
+/* Footer Actions */
+.footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1.5rem;
+}
+
+button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.primary-btn {
+  background: var(--primary);
+  color: white;
+}
+
+.primary-btn:hover:not(:disabled) {
+  background: var(--primary-light);
+}
+
+.secondary-btn {
+  background: #e2e8f0;
+  color: var(--text);
+}
+
+/* Estate Input */
+.input-card {
+  padding: 2rem;
+  background: #f1f5f9;
+  border-radius: 0.5rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-group label {
+  font-weight: 700;
+}
+
+.input-group input {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  font-size: 1.25rem;
+}
+
+/* Results View */
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.result-card {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.result-card .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.relation {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.share-tag {
+  background: #dcfce7;
+  color: #166534;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-weight: 800;
+}
+
+.amount-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  color: var(--primary);
+}
+
+.reasoning-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--secondary);
+}
+
+.arabic-text {
+  font-family: 'Traditional Arabic', serif;
+  font-size: 1.25rem;
+  background: #fffbeb;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border-right: 4px solid #f59e0b;
+}
+
+.loading-view {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}

@@ -1,0 +1,177 @@
+[
+  {
+    "rule_id": "V1",
+    "arabic_text": "فماله بينهم للذكر مثل حظ الأنثيين",
+    "meaning": "Male receives double female.",
+    "conditions": {
+      "target_group": "children",
+      "has_male": true,
+      "has_female": true
+    },
+    "actions": {
+      "apply_ratio": { "male": 2, "female": 1 }
+    },
+    "priority": 1,
+    "source": "Paragraph 1329"
+  },
+  {
+    "rule_id": "V2",
+    "arabic_text": "فإن لم يترك غير ولد واحد ذكر فالميراث له كله",
+    "meaning": "Single son inherits all.",
+    "conditions": {
+      "target_group": "children",
+      "count": { "son": 1 },
+      "has_female": false
+    },
+    "actions": {
+      "assign_fraction": "1/1"
+    },
+    "priority": 1,
+    "source": "Paragraph 1329"
+  },
+  {
+    "rule_id": "V3",
+    "arabic_text": "فللابنة النصف بالميراث ويرد عليها النصف الثاني بالرحم",
+    "meaning": "Single daughter receives 1/2 plus radd.",
+    "conditions": {
+      "target_group": "children",
+      "count": { "daughter": 1 },
+      "has_male": false
+    },
+    "actions": {
+      "assign_fraction": "1/2",
+      "flag_radd": true
+    },
+    "priority": 1,
+    "source": "Paragraph 1329"
+  },
+  {
+    "rule_id": "V4",
+    "arabic_text": "فلكل واحدة الثلث ويرد عليهما",
+    "meaning": "Two daughters receive fixed shares (2/3 total) plus radd.",
+    "conditions": {
+      "target_group": "children",
+      "count": { "daughter": 2 },
+      "has_male": false
+    },
+    "actions": {
+      "assign_fraction": "2/3",
+      "flag_radd": true
+    },
+    "priority": 1,
+    "source": "Paragraph 1331"
+  },
+  {
+    "rule_id": "V7",
+    "arabic_text": "فلأمه الثلث وللأب الثلثان",
+    "meaning": "Parents only case: Mother 1/3, Father 2/3.",
+    "conditions": {
+      "target_relation": "Parents",
+      "has_children": false
+    },
+    "actions": {
+      "assign_fraction": "1/3",
+      "target_specific": "Mother"
+    },
+    "priority": 2,
+    "source": "Paragraph 1336"
+  },
+  {
+    "rule_id": "V8",
+    "arabic_text": "للزوج النصف إذا لم يكن ولد",
+    "meaning": "Husband 1/2 if no children.",
+    "conditions": {
+      "target_relation": "Husband",
+      "has_children": false
+    },
+    "actions": {
+      "assign_fraction": "1/2"
+    },
+    "priority": 2,
+    "source": "Paragraph 1329"
+  },
+  {
+    "rule_id": "V9",
+    "arabic_text": "فإن كان ولد فله الربع",
+    "meaning": "Husband 1/4 if children exist.",
+    "conditions": {
+      "target_relation": "Husband",
+      "has_children": true
+    },
+    "actions": {
+      "assign_fraction": "1/4"
+    },
+    "priority": 2,
+    "source": "Paragraph 1329"
+  },
+  {
+    "rule_id": "V10",
+    "arabic_text": "وللمرأة الربع إذا لم يكن ولد",
+    "meaning": "Wife 1/4 if no children.",
+    "conditions": {
+      "target_relation": "Wife",
+      "has_children": false
+    },
+    "actions": {
+      "assign_fraction": "1/4"
+    },
+    "priority": 2,
+    "source": "Paragraph 1329"
+  },
+  {
+    "rule_id": "V11",
+    "arabic_text": "فإن كان ولد فلها الثمن",
+    "meaning": "Wife 1/8 if children exist.",
+    "conditions": {
+      "target_relation": "Wife",
+      "has_children": true
+    },
+    "actions": {
+      "assign_fraction": "1/8"
+    },
+    "priority": 2,
+    "source": "Paragraph 1329"
+  },
+  {
+    "rule_id": "V12",
+    "arabic_text": "فللأم السدس مع الولد",
+    "meaning": "Mother 1/6 with children.",
+    "conditions": {
+      "target_relation": "Mother",
+      "has_children": true
+    },
+    "actions": {
+      "assign_fraction": "1/6"
+    },
+    "priority": 2,
+    "source": "Paragraph 1331"
+  },
+  {
+    "rule_id": "V13",
+    "arabic_text": "الأب يأخذ ما بقي",
+    "meaning": "Father takes the remainder.",
+    "conditions": {
+      "target_relation": "Father",
+      "has_children": true
+    },
+    "actions": {
+      "assign_remainder": true
+    },
+    "priority": 2,
+    "source": "Paragraph 1331"
+  },
+  {
+    "rule_id": "V14",
+    "arabic_text": "ولا ميراث للإخوة مع الأب ولا مع الولد",
+    "meaning": "Siblings blocked by Father or Children.",
+    "conditions": {
+      "target_relation": "Siblings",
+      "blocking_factors": ["Father", "Children"]
+    },
+    "actions": {
+      "block_relation": true
+    },
+    "priority": 4,
+    "source": "Paragraph 1331"
+  }
+]

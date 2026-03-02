@@ -405,6 +405,12 @@ button, .btn-primary, .btn-outline, .btn-icon {
   color: var(--secondary);
 }
 
+.share.blocked-label {
+  border-color: var(--error);
+  color: var(--error);
+  background: #fef2f2;
+}
+
 .distribution-card .amount {
   font-size: 1.8rem;
   font-weight: 800;

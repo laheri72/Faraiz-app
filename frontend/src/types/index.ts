@@ -8,13 +8,6 @@ export interface HeirInput {
     is_missing?: boolean;
 }
 
-export interface CalculationRequest {
-    estate_value: number;
-    debts?: number;
-    wasiyyah?: number;
-    heirs: HeirInput[];
-}
-
 export interface CalculationResult {
     heir_id: string;
     relation: string;
@@ -22,6 +15,9 @@ export interface CalculationResult {
     amount: number;
     rules_used: string[];
     arabic_reasoning: string[];
+    is_blocked: boolean;
+    blocked_by?: string | null;
+    blocking_rule_id?: string | null;
 }
 
 export interface VerificationData {
@@ -32,7 +28,6 @@ export interface VerificationData {
 }
 
 export interface CalculationResponse {
-    case_id: number;
     results: CalculationResult[];
     verification: VerificationData;
 }

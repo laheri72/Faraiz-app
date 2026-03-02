@@ -12,11 +12,18 @@ class Heir(BaseModel):
     is_illegitimate: bool = False
     is_missing: bool = False
 
+class BlockingDetail(BaseModel):
+    blocked: bool = False
+    blocked_by: Optional[str] = None
+    blocking_rule: Optional[str] = None
+    arabic_text: Optional[str] = None
+
 class IndividualHeir(BaseModel):
     heir_id: str # e.g. Daughter_1
     relation: str
     fraction: Fraction
     amount: Fraction
+    blocking: Optional[BlockingDetail] = None
     
     class Config:
         arbitrary_types_allowed = True
@@ -29,7 +36,7 @@ class RuleCondition(BaseModel):
     value: Any
 
 class RuleAction(BaseModel):
-    type: str # assign_fraction, assign_remainder, exclude_heir, mark_blocked, flag_radd, substitute_relation, procedure_action
+    type: str # assign_fraction, assign_remainder, exclude_heir, mark_blocked, flag_radd, substitute_relation, procedure_action, blocking
     target: Optional[str] = None
     value: Optional[str] = None # For fraction strings like "1/2"
     radd_eligible: bool = False
@@ -39,7 +46,7 @@ class RuleAction(BaseModel):
 class Rule(BaseModel):
     rule_id: str
     priority: int
-    category: str # eligibility, substitution, exclusion, allocation, final
+    category: str # eligibility, substitution, exclusion, allocation, final, blocking
     slot: Optional[str] = None # logical slot to prevent overwrites (e.g., descendant_fixed)
     conditions: Dict[str, List[RuleCondition]] # "all", "any", "none"
     actions: List[RuleAction]
@@ -58,6 +65,7 @@ class CaseState(BaseModel):
     radd_pool: Set[str] = set() # relations eligible for radd
     remainder_sink: Optional[str] = None # primary relation to take leftover
     excluded_relations: Set[str] = set() # relations blocked by proximity or other rules
+    blocking_map: Dict[str, BlockingDetail] = {} # relation -> blocking details
     virtual_mappings: Dict[str, str] = {} # substituted relations (e.g., Grandson -> Son)
     
     # Verification Ledger
@@ -83,6 +91,9 @@ class CalculationResult(BaseModel):
     amount: float
     rules_used: List[str]
     arabic_reasoning: List[str]
+    is_blocked: bool = False
+    blocked_by: Optional[str] = None
+    blocking_rule_id: Optional[str] = None
 
 class CalculationRequest(BaseModel):
     estate_value: float

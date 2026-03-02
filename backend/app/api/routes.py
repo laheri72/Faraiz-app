@@ -4,56 +4,64 @@ from typing import List, Dict, Any
 from ..database.session import get_db
 from ..database.schema import CaseRecord, ResultRecord
 from ..engine.core import EnginePipeline
-from ..engine.models import Heir, CalculationResult
-from pydantic import BaseModel
+from ..engine.models import Heir, CalculationResponse, CalculationRequest
 
 router = APIRouter()
 engine = EnginePipeline()
 
-class CalculationRequest(BaseModel):
-    estate_value: float
-    debts: float = 0.0
-    wasiyyah: float = 0.0
-    heirs: List[Heir]
-
-@router.post("/calculate")
+@router.post("/calculate", response_model=CalculationResponse)
 def calculate_inheritance(req: CalculationRequest, db: Session = Depends(get_db)):
+    print(f"\n>>> RECEIVED REQUEST: Estate={req.estate_value}")
     try:
         # 1. Run the Jurisprudence Engine
-        results = engine.calculate(req.heirs, req.estate_value, req.debts, req.wasiyyah)
+        print(">>> STEP 1: Running Engine...")
+        output = engine.calculate(req.heirs, req.estate_value, req.debts, req.wasiyyah)
+        results = output["results"]
+        verification = output["verification"]
+        print(f">>> STEP 1 COMPLETE: {len(results)} heirs calculated.")
         
-        # 2. Persist the Case
+        # 2. Persist to Database
+        print(">>> STEP 2: Saving to Database...")
         new_case = CaseRecord(
             estate_value=req.estate_value,
-            heirs_input=[h.dict() for h in req.heirs]
+            heirs_input=[h.model_dump() for h in req.heirs]
         )
         db.add(new_case)
-        db.commit()
-        db.refresh(new_case)
+        db.flush() 
+        print(f">>> STEP 2: Case ID {new_case.id} created. Saving results...")
         
-        # 3. Persist the Results
-        persistent_results = []
         for res in results:
             new_result = ResultRecord(
                 case_id=new_case.id,
-                heir_relation=res["heir"],
-                share_fraction=res["share"],
-                amount=res["amount"],
-                rules_used=res["rules_used"],
-                arabic_reasoning=res["arabic_reasoning"]
+                heir_relation=res.relation,
+                share_fraction=res.share,
+                amount=res.amount,
+                rules_used=res.rules_used,
+                arabic_reasoning=res.arabic_reasoning
             )
             db.add(new_result)
-            persistent_results.append(res)
         
         db.commit()
+        print(">>> STEP 3: Transaction committed.")
+        
+        # We skip refresh() to avoid potential hangs on some SQLite drivers
+        # new_case.id is already available due to flush()
         
         return {
             "case_id": new_case.id,
-            "results": persistent_results
+            "results": results,
+            "verification": verification
         }
-    except Exception as e:
+    except ValueError as ve:
+        print(f">>> INTEGRITY ERROR: {str(ve)}")
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        print(f">>> UNEXPECTED ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 @router.get("/cases/{case_id}")
 def get_case(case_id: int, db: Session = Depends(get_db)):
@@ -67,11 +75,12 @@ def get_case(case_id: int, db: Session = Depends(get_db)):
         "heirs_input": case.heirs_input,
         "results": [
             {
-                "heir": r.heir_relation,
+                "heir_id": f"{r.heir_relation}_{i}",
+                "relation": r.heir_relation,
                 "share": r.share_fraction,
                 "amount": r.amount,
                 "rules_used": r.rules_used,
                 "arabic_reasoning": r.arabic_reasoning
-            } for r in case.results
+            } for i, r in enumerate(case.results)
         ]
     }

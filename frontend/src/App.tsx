@@ -3,7 +3,7 @@ import HeirSelection from './pages/HeirSelection';
 import EstateInput from './pages/EstateInput';
 import ResultsView from './pages/ResultsView';
 import { calculateInheritance } from './api/client';
-import type { HeirInput, CalculationResult } from './types';
+import type { HeirInput, CalculationResult, VerificationData } from './types';
 import './styles/App.css';
 
 type Screen = 'HEIRS' | 'ESTATE' | 'RESULTS' | 'LOADING';
@@ -12,6 +12,7 @@ const App: React.FC = () => {
   const [screen, setScreen] = useState<Screen>('HEIRS');
   const [heirs, setHeirs] = useState<HeirInput[]>([]);
   const [results, setResults] = useState<CalculationResult[]>([]);
+  const [verification, setVerification] = useState<VerificationData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleHeirsSelected = (selectedHeirs: HeirInput[]) => {
@@ -29,11 +30,18 @@ const App: React.FC = () => {
         wasiyyah: wasiyyah,
         heirs: heirs
       });
+      
+      if (!response || !response.results) {
+        throw new Error('Invalid response received from server.');
+      }
+
       setResults(response.results);
+      setVerification(response.verification || null);
       setScreen('RESULTS');
     } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.detail || 'An error occurred during calculation.');
+      console.error('Calculation Error:', err);
+      const detail = err.response?.data?.detail || err.message || 'An error occurred during calculation.';
+      setError(detail);
       setScreen('ESTATE');
     }
   };
@@ -41,6 +49,7 @@ const App: React.FC = () => {
   const reset = () => {
     setHeirs([]);
     setResults([]);
+    setVerification(null);
     setError(null);
     setScreen('HEIRS');
   };
@@ -69,6 +78,7 @@ const App: React.FC = () => {
       {screen === 'RESULTS' && (
         <ResultsView 
           results={results} 
+          verification={verification}
           onBack={reset} 
         />
       )}

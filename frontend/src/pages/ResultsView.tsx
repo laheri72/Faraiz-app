@@ -1,23 +1,38 @@
 import React from 'react';
-import type { CalculationResult } from '../types';
-import { Book, Landmark } from 'lucide-react';
+import type { CalculationResult, VerificationData } from '../types';
+import { Book, Landmark, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface Props {
     results: CalculationResult[];
+    verification: VerificationData | null;
     onBack: () => void;
 }
 
-const ResultsView: React.FC<Props> = ({ results, onBack }) => {
+const ResultsView: React.FC<Props> = ({ results, verification, onBack }) => {
     return (
         <div className="container results-view">
             <h1 className="title">Distribution Results</h1>
-            <p className="subtitle">The following shares have been calculated based on Daim al-Islam jurisprudence.</p>
+            <p className="subtitle">Individual shares calculated with 100% mathematical precision.</p>
+
+            {verification && (
+                <div className={`verification-banner ${verification.status.toLowerCase()}`}>
+                    <div className="banner-main">
+                        {verification.status === 'VALID' ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
+                        <span>Distribution Integrity: <strong>{verification.status}</strong></span>
+                    </div>
+                    <div className="banner-details">
+                        <span>Estate: {verification.estate_total.toLocaleString()}</span>
+                        <span>Distributed: {verification.total_distributed.toLocaleString()}</span>
+                        <span>Sum: {verification.fraction_sum}</span>
+                    </div>
+                </div>
+            )}
             
             <div className="results-grid">
-                {results.map((res, index) => (
-                    <div key={index} className="result-card">
+                {results.map((res) => (
+                    <div key={res.heir_id} className="result-card">
                         <div className="header">
-                            <span className="relation">{res.heir}</span>
+                            <span className="relation">{res.relation} <small className="heir-id">#{res.heir_id.split('_')[1]}</small></span>
                             <span className="share-tag">{res.share}</span>
                         </div>
                         <div className="amount-section">
@@ -25,7 +40,7 @@ const ResultsView: React.FC<Props> = ({ results, onBack }) => {
                             <span className="amount">{res.amount.toLocaleString()}</span>
                         </div>
                         <div className="reasoning-section">
-                            <h4><Book size={16} /> Legal Reasoning</h4>
+                            <h4><Book size={16} /> Jurisprudence Basis</h4>
                             <div className="arabic-list">
                                 {res.arabic_reasoning.map((text, i) => (
                                     <p key={i} className="arabic-text" dir="rtl">{text}</p>

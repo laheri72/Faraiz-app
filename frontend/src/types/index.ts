@@ -16,14 +16,23 @@ export interface CalculationRequest {
 }
 
 export interface CalculationResult {
-    heir: string;
+    heir_id: string;
+    relation: string;
     share: string;
     amount: number;
     rules_used: string[];
     arabic_reasoning: string[];
 }
 
+export interface VerificationData {
+    estate_total: number;
+    total_distributed: number;
+    fraction_sum: string;
+    status: 'VALID' | 'INVALID';
+}
+
 export interface CalculationResponse {
     case_id: number;
     results: CalculationResult[];
+    verification: VerificationData;
 }

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 from ..database.session import get_db
 from ..database.schema import CaseRecord, ResultRecord
-from ..engine.pipeline import EnginePipeline
+from ..engine.core import EnginePipeline
 from ..engine.models import Heir, CalculationResult
 from pydantic import BaseModel
 
@@ -12,13 +12,15 @@ engine = EnginePipeline()
 
 class CalculationRequest(BaseModel):
     estate_value: float
+    debts: float = 0.0
+    wasiyyah: float = 0.0
     heirs: List[Heir]
 
 @router.post("/calculate")
 def calculate_inheritance(req: CalculationRequest, db: Session = Depends(get_db)):
     try:
         # 1. Run the Jurisprudence Engine
-        results = engine.calculate(req.heirs, req.estate_value)
+        results = engine.calculate(req.heirs, req.estate_value, req.debts, req.wasiyyah)
         
         # 2. Persist the Case
         new_case = CaseRecord(

@@ -1,30 +1,7 @@
 import axios from 'axios';
+import type { CalculationRequest, CalculationResponse } from '../types';
 
-const API_URL = 'http://localhost:8000/api';
-
-export interface HeirInput {
-    relation: string;
-    gender: string;
-    count: number;
-}
-
-export interface CalculationRequest {
-    estate_value: number;
-    heirs: HeirInput[];
-}
-
-export interface CalculationResult {
-    heir: string;
-    share: string;
-    amount: number;
-    rules_used: string[];
-    arabic_reasoning: string[];
-}
-
-export interface CalculationResponse {
-    case_id: number;
-    results: CalculationResult[];
-}
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 
 export const calculateInheritance = async (data: CalculationRequest): Promise<CalculationResponse> => {
     const response = await axios.post(`${API_URL}/calculate`, data);

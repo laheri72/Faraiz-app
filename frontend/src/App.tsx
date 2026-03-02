@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import HeirSelection from './components/HeirSelection';
-import EstateInput from './components/EstateInput';
-import ResultsView from './components/ResultsView';
-import { HeirInput, CalculationResult, calculateInheritance } from './api/client';
+import HeirSelection from './pages/HeirSelection';
+import EstateInput from './pages/EstateInput';
+import ResultsView from './pages/ResultsView';
+import { calculateInheritance } from './api/client';
+import type { HeirInput, CalculationResult } from './types';
 import './styles/App.css';
 
 type Screen = 'HEIRS' | 'ESTATE' | 'RESULTS' | 'LOADING';
@@ -18,12 +19,14 @@ const App: React.FC = () => {
     setScreen('ESTATE');
   };
 
-  const handleCalculate = async (estateValue: number) => {
+  const handleCalculate = async (estateValue: number, debts: number, wasiyyah: number) => {
     setScreen('LOADING');
     setError(null);
     try {
       const response = await calculateInheritance({
         estate_value: estateValue,
+        debts: debts,
+        wasiyyah: wasiyyah,
         heirs: heirs
       });
       setResults(response.results);

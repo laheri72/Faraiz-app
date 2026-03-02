@@ -1,5 +1,19 @@
 [
   {
+    "rule_id": "V6",
+    "arabic_text": "ولد الولد يقوم مقام الولد",
+    "meaning": "Grandchildren substitute children.",
+    "conditions": {
+      "target_group": "grandchildren",
+      "has_children": false
+    },
+    "actions": {
+      "assign_fraction": "1/1"
+    },
+    "priority": 0,
+    "source": "Paragraph 1331"
+  },
+  {
     "rule_id": "V1",
     "arabic_text": "فماله بينهم للذكر مثل حظ الأنثيين",
     "meaning": "Male receives double female.",

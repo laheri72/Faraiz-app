@@ -1,0 +1,18 @@
+{
+  "name": "faraiz-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Fatemi Wirasat Engine - Islamic Inheritance Calculator",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --port 8000",
+    "install:all": "npm install && cd frontend && npm install && cd .. && python -m pip install -r backend/requirements.txt",
+    "build": "npm run build --prefix frontend",
+    "lint": "npm run lint --prefix frontend",
+    "test": "cd backend && python tests/comprehensive_test.py"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

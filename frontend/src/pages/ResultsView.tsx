@@ -1,6 +1,6 @@
 import React from 'react';
-import { CalculationResult } from '../api/client';
-import { Book, Hash, Landmark } from 'lucide-react';
+import type { CalculationResult } from '../types';
+import { Book, Landmark } from 'lucide-react';
 
 interface Props {
     results: CalculationResult[];

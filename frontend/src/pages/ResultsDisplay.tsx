@@ -3,6 +3,7 @@ import type { CalculationResult, VerificationData } from '../types';
 import { RotateCcw, ShieldCheck } from 'lucide-react';
 import ResultsTable from '../components/ResultsTable';
 import VerificationPanel from '../components/VerificationPanel';
+import SummaryOverview from '../components/SummaryOverview';
 
 interface Props {
     results: CalculationResult[];
@@ -19,6 +20,12 @@ const ResultsDisplay: React.FC<Props> = ({ results, verification, onBack }) => {
                     Final Distribution Decree
                 </h2>
                 <p>The distribution below is based on the deterministic application of Fatemi Fiqh rules.</p>
+            </div>
+
+            <SummaryOverview results={results} />
+
+            <div className="section-title serif mt-4" style={{ marginBottom: '1.5rem' }}>
+                Full Distribution Breakdown
             </div>
 
             <ResultsTable results={results} />

@@ -11,7 +11,16 @@ const ResultsTable: React.FC<Props> = ({ results }) => {
     return (
         <div className="distribution-list">
             {results.map((res, i) => (
-                <div key={i} className="distribution-card animate-fade" style={{ animationDelay: `${i * 0.1}s`, opacity: res.is_blocked ? 0.7 : 1 }}>
+                <div 
+                    key={i} 
+                    id={`detail-${res.heir_id}`}
+                    className="distribution-card animate-fade" 
+                    style={{ 
+                        animationDelay: `${i * 0.1}s`, 
+                        opacity: res.is_blocked ? 0.7 : 1,
+                        scrollMarginTop: '2rem'
+                    }}
+                >
                     <div className="header">
                         <div>
                             <span className="relation">{res.relation}</span>

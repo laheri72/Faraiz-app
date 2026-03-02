@@ -1,9 +1,23 @@
 import React, { useState } from 'react';
+import { formatCurrencyIndian, numberToWords } from '../api/utils';
 
 interface Props {
     initialData: { value: number, debts: number, wasiyyah: number };
     onNext: (value: number, debts: number, wasiyyah: number) => void;
 }
+
+const AmountPreview: React.FC<{ value: string }> = ({ value }) => {
+    const numValue = parseFloat(value);
+    if (isNaN(numValue) || numValue <= 0) return null;
+
+    return (
+        <div className="amount-preview animate-fade" style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+            <span style={{ fontWeight: '700', color: 'var(--gold)' }}>₹ {formatCurrencyIndian(numValue)}</span>
+            <span style={{ margin: '0 0.5rem' }}>•</span>
+            <span>{numberToWords(Math.floor(numValue))}</span>
+        </div>
+    );
+};
 
 const EstateForm: React.FC<Props> = ({ initialData, onNext }) => {
     const [value, setValue] = useState<string>(initialData.value ? initialData.value.toString() : '');
@@ -24,10 +38,11 @@ const EstateForm: React.FC<Props> = ({ initialData, onNext }) => {
                         type="number" 
                         id="estate" 
                         inputMode="decimal"
-                        placeholder="Enter total amount (e.g., 240,000)" 
+                        placeholder="Enter total amount (e.g., 240000)" 
                         value={value}
                         onChange={(e) => setValue(e.target.value)}
                     />
+                    <AmountPreview value={value} />
                 </div>
 
                 <div className="form-group">
@@ -36,10 +51,11 @@ const EstateForm: React.FC<Props> = ({ initialData, onNext }) => {
                         type="number" 
                         id="debts" 
                         inputMode="decimal"
-                        placeholder="Enter debts to be paid (e.g., 10,000)" 
+                        placeholder="Enter debts (e.g., 10000)" 
                         value={debts}
                         onChange={(e) => setDebts(e.target.value)}
                     />
+                    <AmountPreview value={debts} />
                 </div>
 
                 <div className="form-group">
@@ -48,10 +64,11 @@ const EstateForm: React.FC<Props> = ({ initialData, onNext }) => {
                         type="number" 
                         id="wasiyyah" 
                         inputMode="decimal"
-                        placeholder="Enter will amount if applicable (e.g., 20,000)" 
+                        placeholder="Enter will amount (e.g., 20000)" 
                         value={wasiyyah}
                         onChange={(e) => setWasiyyah(e.target.value)}
                     />
+                    <AmountPreview value={wasiyyah} />
                 </div>
             </div>
 

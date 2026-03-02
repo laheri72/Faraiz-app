@@ -39,7 +39,10 @@ KNOWLEDGE_BASE: List[Rule] = [
             RuleAction(type="blocking", target="Brother"),
             RuleAction(type="blocking", target="Sister"),
             RuleAction(type="blocking", target="Nephew"),
-            RuleAction(type="blocking", target="Uncle"),
+            RuleAction(type="blocking", target="Paternal_Uncle"),
+            RuleAction(type="blocking", target="Maternal_Uncle"),
+            RuleAction(type="blocking", target="Paternal_Aunt"),
+            RuleAction(type="blocking", target="Maternal_Aunt"),
             RuleAction(type="blocking", target="Cousin"),
             RuleAction(type="blocking", target="Dhawu_Arham")
         ],
@@ -51,23 +54,12 @@ KNOWLEDGE_BASE: List[Rule] = [
         actions=[
             RuleAction(type="blocking", target="Brother"),
             RuleAction(type="blocking", target="Sister"),
-            RuleAction(type="blocking", target="Nephew"),
-            RuleAction(type="blocking", target="Uncle"),
-            RuleAction(type="blocking", target="Cousin")
+            RuleAction(type="blocking", target="Son_of_Brother"),
+            RuleAction(type="blocking", target="Son_of_Sister"),
+            RuleAction(type="blocking", target="Paternal_Uncle"),
+            RuleAction(type="blocking", target="Maternal_Uncle")
         ],
-        arabic_text="ولا ميراث للإخوة مع الأب", meaning="Father blocks Siblings, Nephews, Uncles, and Cousins"
-    ),
-    Rule(
-        rule_id="M3-BROTHER-BLOCK-NEPHEW", priority=120, category="blocking",
-        conditions={"all": [RuleCondition(fact="exists", relation="Brother", operator="==", value=True)]},
-        actions=[RuleAction(type="blocking", target="Nephew")],
-        arabic_text="الأخ يحجب ابن الأخ", meaning="Brother blocks Nephew"
-    ),
-    Rule(
-        rule_id="M4-UNCLE-BLOCK-COUSIN", priority=130, category="blocking",
-        conditions={"all": [RuleCondition(fact="exists", relation="Uncle", operator="==", value=True)]},
-        actions=[RuleAction(type="blocking", target="Cousin")],
-        arabic_text="العم يحجب ابن العم", meaning="Uncle blocks Cousin"
+        arabic_text="ولا ميراث للإخوة مع الأب", meaning="Father blocks Siblings, Nephews, and Uncles"
     ),
 
     # --- LAYER 1: SUBSTITUTION (500-599) ---
@@ -76,11 +68,15 @@ KNOWLEDGE_BASE: List[Rule] = [
         conditions={
             "all": [
                 RuleCondition(fact="count", relation="Son", operator="==", value=0),
-                RuleCondition(fact="count", relation="Daughter", operator="==", value=0),
-                RuleCondition(fact="exists", relation="Grandson", operator="==", value=True)
+                RuleCondition(fact="count", relation="Daughter", operator="==", value=0)
             ]
         },
-        actions=[RuleAction(type="substitute_relation", source="Grandson", as_relation="Son")],
+        actions=[
+            RuleAction(type="substitute_relation", source="Son_of_Son", as_relation="Son"),
+            RuleAction(type="substitute_relation", source="Daughter_of_Son", as_relation="Son"),
+            RuleAction(type="substitute_relation", source="Son_of_Daughter", as_relation="Daughter"),
+            RuleAction(type="substitute_relation", source="Daughter_of_Daughter", as_relation="Daughter")
+        ],
         arabic_text="ولد الولد يقوم مقام الولد", meaning="Grandchildren substitute children if children absent"
     ),
 
@@ -154,22 +150,6 @@ KNOWLEDGE_BASE: List[Rule] = [
         arabic_text="للزوجة الربع إذا لم يكن ولد", meaning="Wife receives 1/4 when no descendants exist"
     ),
     Rule(
-        rule_id="V7-PARENTS-ONLY", priority=800, category="allocation", slot="parents_fixed",
-        conditions={
-            "all": [
-                RuleCondition(fact="count", relation="Father", operator="==", value=1),
-                RuleCondition(fact="count", relation="Mother", operator="==", value=1),
-                RuleCondition(fact="has_descendants", operator="==", value=False),
-                RuleCondition(fact="total_valid_heirs", operator="==", value=2)
-            ]
-        },
-        actions=[
-            RuleAction(type="assign_fraction", target="Mother", value="1/3", radd_eligible=True),
-            RuleAction(type="assign_fraction", target="Father", value="2/3", radd_eligible=True)
-        ],
-        arabic_text="فلأمه الثلث وللأب الثلثان", meaning="When only parents exist, Mother 1/3 and Father 2/3"
-    ),
-    Rule(
         rule_id="L2-MOTHER-CHILD", priority=810, category="allocation", slot="mother_fixed",
         conditions={"all": [RuleCondition(fact="exists", relation="Mother", operator="==", value=True), RuleCondition(fact="has_descendants", operator="==", value=True)]},
         actions=[RuleAction(type="assign_fraction", target="Mother", value="1/6", radd_eligible=True)],
@@ -194,6 +174,21 @@ KNOWLEDGE_BASE: List[Rule] = [
         arabic_text="والأب أقرب فيأخذ ما بقي", meaning="Father receives remainder when he exists"
     ),
 
+    # --- LAYER 2.5: RADD OVERRIDES (850-899) ---
+    Rule(
+        rule_id="RADD_DHAWU_WITH_FATHER", priority=850, category="allocation",
+        conditions={
+            "all": [
+                RuleCondition(fact="exists", relation="Father", operator="==", value=True),
+                RuleCondition(fact="has_substituted_descendants", operator="==", value=True)
+            ]
+        },
+        actions=[
+            RuleAction(type="set_radd_eligibility", target="Father", radd_eligible=False)
+        ],
+        arabic_text="ويرد عليها الباقي على قدر السهام", meaning="When Dhawu al-Arham inherit with Father, Radd goes to them only"
+    ),
+
     # --- LAYER 3: PRIORITY ENGINE (900-1099) ---
     Rule(
         rule_id="L3-SIBLINGS-ALLOC", priority=900, category="allocation", slot="class2_fixed",
@@ -209,15 +204,16 @@ KNOWLEDGE_BASE: List[Rule] = [
     ),
     Rule(
         rule_id="L3-UNCLES-ALLOC", priority=910, category="allocation", slot="class3_fixed",
-        conditions={"all": [RuleCondition(fact="exists", relation="Uncle", operator="==", value=True)]},
-        actions=[RuleAction(type="assign_remainder", target="Uncle")],
-        arabic_text="فالميراث للأعمام", meaning="Uncles inherit remainder if closer kin absent"
-    ),
-    Rule(
-        rule_id="L3-COUSINS-ALLOC", priority=920, category="allocation", slot="class3_fixed",
-        conditions={"all": [RuleCondition(fact="exists", relation="Cousin", operator="==", value=True)]},
-        actions=[RuleAction(type="assign_remainder", target="Cousin")],
-        arabic_text="فالميراث لبني الأعمام", meaning="Cousins inherit if no uncles exist"
+        conditions={
+            "all": [
+                RuleCondition(fact="exists_class", target_class="uncles_aunts", operator="==", value=True),
+                RuleCondition(fact="exists", relation="Father", operator="==", value=False),
+                RuleCondition(fact="has_descendants", operator="==", value=False),
+                RuleCondition(fact="exists_class", target_class="siblings", operator="==", value=False)
+            ]
+        },
+        actions=[RuleAction(type="assign_remainder", target="Uncles_Aunts")],
+        arabic_text="فالميراث للأعمام والأخوال", meaning="Uncles and Aunts inherit remainder if closer kin absent"
     ),
 
     # --- FINAL: BAYT AL MAL ---
@@ -239,19 +235,21 @@ class InferenceEngine:
 
     def _get_fact_value(self, condition: RuleCondition) -> Any:
         fact = condition.fact
-        rel = condition.relation
+        rel_type = condition.relation
         
-        def get_count(relation_name):
-            cnt = sum(h.count for h in self.state.valid_heirs if h.relation == relation_name and relation_name not in self.state.excluded_relations)
+        def get_count(target_rel_type):
+            cnt = sum(h.count for h in self.state.valid_heirs if h.relation_type == target_rel_type and h.relation_type not in self.state.excluded_relations)
             for src, as_rel in self.state.virtual_mappings.items():
-                if as_rel == relation_name:
-                    cnt += sum(h.count for h in self.state.valid_heirs if h.relation == src and src not in self.state.excluded_relations)
+                if as_rel == target_rel_type:
+                    cnt += sum(h.count for h in self.state.valid_heirs if h.relation_type == src and h.relation_type not in self.state.excluded_relations)
             return cnt
 
         if fact == "count":
-            return get_count(rel)
+            return get_count(rel_type)
         if fact == "exists":
-            return get_count(rel) > 0
+            return get_count(rel_type) > 0
+        if fact == "lineage_exists":
+            return any(h.lineage == condition.value for h in self.state.valid_heirs if h.relation_type not in self.state.excluded_relations)
         if fact == "is_killer":
             return any(h.is_killer for h in self.state.heirs)
         if fact == "is_different_religion":
@@ -261,15 +259,19 @@ class InferenceEngine:
         if fact == "has_wasiyyah":
             return self.state.wasiyyah > 0
         if fact == "has_descendants":
-            return any(get_count(r) > 0 for r in ["Son", "Daughter", "Grandson", "Granddaughter"])
+            return any(get_count(r) > 0 for r in ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter"])
+        if fact == "has_substituted_descendants":
+            return any(get_count(r) > 0 for r in ["Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter"])
         if fact == "total_heirs":
             return len(self.state.heirs)
         if fact == "total_valid_heirs":
-            valid_non_excluded = [h for h in self.state.valid_heirs if h.relation not in self.state.excluded_relations]
+            valid_non_excluded = [h for h in self.state.valid_heirs if h.relation_type not in self.state.excluded_relations]
             return len(valid_non_excluded)
         if fact == "exists_class":
             if condition.target_class == "siblings":
                 return any(get_count(r) > 0 for r in ["Brother", "Sister"])
+            if condition.target_class == "uncles_aunts":
+                return any(get_count(r) > 0 for r in ["Paternal_Uncle", "Maternal_Uncle", "Paternal_Aunt", "Maternal_Aunt"])
         return None
 
     def evaluate_rule(self, rule: Rule) -> bool:
@@ -306,9 +308,7 @@ class InferenceEngine:
                 self.state.excluded_relations.add(action.target)
             elif action.type == "blocking":
                 if action.target not in self.state.blocking_map:
-                    # Identify the blocker
                     blocker = "Engine Rules"
-                    # Try to find a specific blocker if condition was 'exists'
                     for logic_type, conds in rule.conditions.items():
                         for c in conds:
                             if c.fact in ["exists", "has_descendants"]:
@@ -332,6 +332,11 @@ class InferenceEngine:
                     self.state.remainder_sink = action.target
             elif action.type == "mark_blocked":
                  self.state.excluded_relations.add(action.target)
+            elif action.type == "set_radd_eligibility":
+                if action.radd_eligible:
+                    self.state.radd_pool.add(action.target)
+                elif action.target in self.state.radd_pool:
+                    self.state.radd_pool.remove(action.target)
         
         if rule.slot:
             self.state.occupied_slots.add(rule.slot)
@@ -340,7 +345,6 @@ class InferenceEngine:
 class MathEngine:
     @staticmethod
     def resolve(state: CaseState) -> Dict[str, Any]:
-        # 1. Remainder / Radd
         fixed_sum = sum(state.assigned_fractions.values())
         rem = Fraction(1, 1) - fixed_sum
         ledger = state.assigned_fractions.copy()
@@ -354,20 +358,19 @@ class MathEngine:
                     for r in state.radd_pool:
                         if r in ledger:
                             ledger[r] += rem * (ledger[r] / radd_sum)
-                elif len(state.radd_pool) > 0:
-                    # If pool exists but ledger doesn't have them yet (e.g. they only get radd)
-                    # This happens with Daughters only cases if they weren't assigned fixed yet
-                    # But usually Layer 1 handles fixed.
-                    pass
             else:
                 ledger["Bayt_al_Mal"] = rem
 
-        # 2. Expand into Individuals and Sort
         individual_results = []
-        RELATION_ORDER = ["Father", "Mother", "Husband", "Wife", "Son", "Daughter", "Grandson", "Granddaughter", "Brother", "Sister", "Uncle", "Cousin", "Dhawu_Arham", "Bayt_al_Mal"]
+        # Update RELATION_ORDER with new types
+        RELATION_ORDER = [
+            "Father", "Mother", "Husband", "Wife", "Son", "Daughter", 
+            "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter",
+            "Brother", "Sister", "Paternal_Uncle", "Maternal_Uncle", "Paternal_Aunt", "Maternal_Aunt",
+            "Cousin", "Dhawu_Arham", "Bayt_al_Mal"
+        ]
         
-        # Sort all heirs including those blocked
-        sorted_all_heirs = sorted(state.heirs, key=lambda h: RELATION_ORDER.index(h.relation) if h.relation in RELATION_ORDER else 99)
+        sorted_all_heirs = sorted(state.heirs, key=lambda h: RELATION_ORDER.index(h.relation_type) if h.relation_type in RELATION_ORDER else 99)
 
         applied_arabic = []
         for rid in state.fired_rules:
@@ -375,11 +378,10 @@ class MathEngine:
             if rule_obj: applied_arabic.append(rule_obj.arabic_text)
 
         for h in sorted_all_heirs:
-            effective_rel = state.virtual_mappings.get(h.relation, h.relation)
+            effective_rel = state.virtual_mappings.get(h.relation_type, h.relation_type)
             share_val = Fraction(0)
-            blocking_info = state.blocking_map.get(h.relation)
+            blocking_info = state.blocking_map.get(h.relation_type)
             
-            # Layer 4 blocking (Killer, etc)
             if not blocking_info:
                 if h.is_killer: blocking_info = BlockingDetail(blocked=True, blocked_by="Self", blocking_rule="S1-KILLER", arabic_text="القاتل لا يرث")
                 elif h.is_different_religion: blocking_info = BlockingDetail(blocked=True, blocked_by="Self", blocking_rule="S2-RELIGION", arabic_text="اختلاف الدين يمنع الميراث")
@@ -388,11 +390,11 @@ class MathEngine:
                 if effective_rel in ledger:
                     share_val = ledger[effective_rel]
                 elif effective_rel in ["Son", "Daughter"] and "Children" in ledger:
-                    def count_class(relation_name):
-                        cnt = sum(x.count for x in state.valid_heirs if x.relation == relation_name and x.relation not in state.excluded_relations)
+                    def count_class(target_rel_type):
+                        cnt = sum(x.count for x in state.valid_heirs if x.relation_type == target_rel_type and x.relation_type not in state.excluded_relations)
                         for src, as_rel in state.virtual_mappings.items():
-                            if as_rel == relation_name:
-                                cnt += sum(x.count for x in state.valid_heirs if x.relation == src and src not in state.excluded_relations)
+                            if as_rel == target_rel_type:
+                                cnt += sum(x.count for x in state.valid_heirs if x.relation_type == src and x.relation_type not in state.excluded_relations)
                         return cnt
                     sons = count_class("Son")
                     daughters = count_class("Daughter")
@@ -400,22 +402,25 @@ class MathEngine:
                     individual_unit = ledger["Children"] / units
                     share_val = (individual_unit * (2 if effective_rel == "Son" else 1)) * h.count
                 elif effective_rel in ["Brother", "Sister"] and "Siblings" in ledger:
-                    bros = sum(x.count for x in state.valid_heirs if x.relation == "Brother" and x.relation not in state.excluded_relations)
-                    sis = sum(x.count for x in state.valid_heirs if x.relation == "Sister" and x.relation not in state.excluded_relations)
+                    bros = sum(x.count for x in state.valid_heirs if x.relation_type == "Brother" and x.relation_type not in state.excluded_relations)
+                    sis = sum(x.count for x in state.valid_heirs if x.relation_type == "Sister" and x.relation_type not in state.excluded_relations)
                     units = (bros * 2) + sis
                     individual_unit = ledger["Siblings"] / units
                     share_val = (individual_unit * (2 if effective_rel == "Brother" else 1)) * h.count
+                elif "Uncles_Aunts" in ledger:
+                    # Simple equal split for uncles/aunts for now
+                    total_count = sum(x.count for x in state.valid_heirs if x.relation_type in ["Paternal_Uncle", "Maternal_Uncle", "Paternal_Aunt", "Maternal_Aunt"] and x.relation_type not in state.excluded_relations)
+                    share_val = (ledger["Uncles_Aunts"] / total_count) * h.count if total_count > 0 else Fraction(0)
 
             individual_share = share_val / h.count if h.count > 0 else Fraction(0)
             for i in range(1, h.count + 1):
                 amt = individual_share * state.estate_total
                 individual_results.append(IndividualHeir(
-                    heir_id=f"{h.relation}_{i}", relation=h.relation,
+                    heir_id=f"{h.relation_type}_{i}", relation=h.relation,
                     fraction=individual_share, amount=amt,
                     blocking=blocking_info
                 ))
 
-        # Bayt al Mal
         if "Bayt_al_Mal" in ledger and ledger["Bayt_al_Mal"] > 0:
             amt = ledger["Bayt_al_Mal"] * state.estate_total
             individual_results.append(IndividualHeir(
@@ -427,10 +432,6 @@ class MathEngine:
         total_distributed = sum(h.amount for h in individual_results if not h.blocking)
         is_valid = (total_fraction == Fraction(1, 1)) and (abs(float(total_distributed - state.estate_total)) < 0.01)
         
-        if len(individual_results) > 0 and total_fraction != Fraction(1, 1):
-             # For troubleshooting, we can see why it failed
-             pass
-
         verification = VerificationData(
             estate_total=float(state.estate_total),
             total_distributed=float(total_distributed),
@@ -464,12 +465,11 @@ class MathEngine:
 class EnginePipeline:
     def calculate(self, heirs: List[Heir], estate_value: float, debts: float = 0.0, wasiyyah: float = 0.0) -> Dict[str, Any]:
         state = CaseState(estate_total=Fraction(estate_value), debts=Fraction(debts), wasiyyah=Fraction(wasiyyah), heirs=heirs)
-        state.valid_heirs = heirs # All starting heirs are candidates
+        state.valid_heirs = heirs
         
         engine = InferenceEngine(state)
         sorted_rules = sorted(KNOWLEDGE_BASE, key=lambda x: x.priority)
         
-        # Execution Layers
         for rule in sorted_rules:
             if engine.evaluate_rule(rule):
                 engine.fire_rule(rule)

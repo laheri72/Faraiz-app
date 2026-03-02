@@ -3,7 +3,9 @@ from typing import List, Dict, Optional, Any, Set, Union
 from fractions import Fraction
 
 class Heir(BaseModel):
-    relation: str  # e.g., "Son", "Daughter", "Husband", "Mother", "Brother", "Sister", "Uncle", "Cousin", "Dhawu_Arham"
+    relation: str  # The display name or generic relation (e.g., "Grandson")
+    relation_type: str # Structured ID (e.g., "Son_of_Son")
+    lineage: str    # "paternal", "maternal", "paternal_descendant", "maternal_descendant", "direct"
     gender: str    # "M" or "F"
     count: int = 1
     # Special conditions (Layer 4)

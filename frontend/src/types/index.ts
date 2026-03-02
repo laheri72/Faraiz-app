@@ -1,5 +1,7 @@
 export interface HeirInput {
     relation: string;
+    relation_type: string;
+    lineage: string;
     gender: string;
     count: number;
     is_killer?: boolean;

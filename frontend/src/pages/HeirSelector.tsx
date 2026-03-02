@@ -10,53 +10,87 @@ interface Props {
     onHeirChange: (heirs: HeirInput[]) => void;
 }
 
-const AVAILABLE_RELATIONS = [
-    { relation: 'Father', gender: 'M', max: 1 },
-    { relation: 'Mother', gender: 'F', max: 1 },
-    { relation: 'Husband', gender: 'M', max: 1 },
-    { relation: 'Wife', gender: 'F', max: 4 },
-    { relation: 'Son', gender: 'M', max: 20 },
-    { relation: 'Daughter', gender: 'F', max: 20 },
-    { relation: 'Brother', gender: 'M', max: 20 },
-    { relation: 'Sister', gender: 'F', max: 20 },
-    { relation: 'Uncle', gender: 'M', max: 20 },
-    { relation: 'Cousin', gender: 'M', max: 20 },
-    { relation: 'Dhawu al-Arham', gender: 'M', max: 1 }
+interface RelationInfo {
+    relation: string;
+    relation_type: string;
+    lineage: string;
+    gender: string;
+    max: number;
+    category: string;
+}
+
+const AVAILABLE_RELATIONS: RelationInfo[] = [
+    // --- DIRECT ---
+    { relation: 'Father', relation_type: 'Father', lineage: 'direct', gender: 'M', max: 1, category: 'Parents' },
+    { relation: 'Mother', relation_type: 'Mother', lineage: 'direct', gender: 'F', max: 1, category: 'Parents' },
+    { relation: 'Husband', relation_type: 'Husband', lineage: 'direct', gender: 'M', max: 1, category: 'Spouse' },
+    { relation: 'Wife', relation_type: 'Wife', lineage: 'direct', gender: 'F', max: 4, category: 'Spouse' },
+    { relation: 'Son', relation_type: 'Son', lineage: 'direct', gender: 'M', max: 20, category: 'Children' },
+    { relation: 'Daughter', relation_type: 'Daughter', lineage: 'direct', gender: 'F', max: 20, category: 'Children' },
+
+    // --- DESCENDANTS (Substitution) ---
+    { relation: 'Son of Son', relation_type: 'Son_of_Son', lineage: 'paternal_descendant', gender: 'M', max: 20, category: 'Grandchildren' },
+    { relation: 'Daughter of Son', relation_type: 'Daughter_of_Son', lineage: 'paternal_descendant', gender: 'F', max: 20, category: 'Grandchildren' },
+    { relation: 'Son of Daughter', relation_type: 'Son_of_Daughter', lineage: 'maternal_descendant', gender: 'M', max: 20, category: 'Grandchildren' },
+    { relation: 'Daughter of Daughter', relation_type: 'Daughter_of_Daughter', lineage: 'maternal_descendant', gender: 'F', max: 20, category: 'Grandchildren' },
+
+    // --- SIBLINGS ---
+    { relation: 'Brother', relation_type: 'Brother', lineage: 'paternal', gender: 'M', max: 20, category: 'Siblings' },
+    { relation: 'Sister', relation_type: 'Sister', lineage: 'paternal', gender: 'F', max: 20, category: 'Siblings' },
+    { relation: 'Son of Brother', relation_type: 'Son_of_Brother', lineage: 'paternal', gender: 'M', max: 20, category: 'Nephews' },
+    { relation: 'Son of Sister', relation_type: 'Son_of_Sister', lineage: 'maternal', gender: 'M', max: 20, category: 'Nephews' },
+
+    // --- EXTENDED ---
+    { relation: 'Paternal Uncle', relation_type: 'Paternal_Uncle', lineage: 'paternal', gender: 'M', max: 20, category: 'Uncles/Aunts' },
+    { relation: 'Paternal Aunt', relation_type: 'Paternal_Aunt', lineage: 'paternal', gender: 'F', max: 20, category: 'Uncles/Aunts' },
+    { relation: 'Maternal Uncle', relation_type: 'Maternal_Uncle', lineage: 'maternal', gender: 'M', max: 20, category: 'Uncles/Aunts' },
+    { relation: 'Maternal Aunt', relation_type: 'Maternal_Aunt', lineage: 'maternal', gender: 'F', max: 20, category: 'Uncles/Aunts' }
 ];
 
 const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) => {
-    const [deceasedGender, setDeceasedGender] = useState<'M' | 'F' | null>(currentHeirs.length > 0 ? (currentHeirs.some(h => h.relation === 'Husband') ? 'F' : 'M') : null);
+    const [deceasedGender, setDeceasedGender] = useState<'M' | 'F' | null>(currentHeirs.length > 0 ? (currentHeirs.some(h => h.relation_type === 'Husband') ? 'F' : 'M') : null);
     const [selectedHeirs, setSelectedHeirs] = useState<HeirInput[]>(currentHeirs);
 
     const filteredRelations = useMemo(() => {
         if (!deceasedGender) return [];
         return AVAILABLE_RELATIONS.filter(item => {
-            if (deceasedGender === 'M' && item.relation === 'Husband') return false;
-            if (deceasedGender === 'F' && item.relation === 'Wife') return false;
+            if (deceasedGender === 'M' && item.relation_type === 'Husband') return false;
+            if (deceasedGender === 'F' && item.relation_type === 'Wife') return false;
             return true;
         });
     }, [deceasedGender]);
 
-    const handleAdd = (item: typeof AVAILABLE_RELATIONS[0]) => {
-        const existingIndex = selectedHeirs.findIndex(h => h.relation === item.relation);
+    const categories = useMemo(() => {
+        const cats = Array.from(new Set(filteredRelations.map(r => r.category)));
+        return cats;
+    }, [filteredRelations]);
+
+    const handleAdd = (item: RelationInfo) => {
+        const existingIndex = selectedHeirs.findIndex(h => h.relation_type === item.relation_type);
         if (existingIndex !== -1) {
             const newHeirs = [...selectedHeirs];
             newHeirs[existingIndex].count += 1;
             setSelectedHeirs(newHeirs);
         } else {
-            setSelectedHeirs([...selectedHeirs, { relation: item.relation, gender: item.gender, count: 1 }]);
+            setSelectedHeirs([...selectedHeirs, { 
+                relation: item.relation, 
+                relation_type: item.relation_type,
+                lineage: item.lineage,
+                gender: item.gender, 
+                count: 1 
+            }]);
         }
     };
 
-    const handleRemove = (relation: string) => {
-        const existingIndex = selectedHeirs.findIndex(h => h.relation === relation);
+    const handleRemove = (relType: string) => {
+        const existingIndex = selectedHeirs.findIndex(h => h.relation_type === relType);
         if (existingIndex !== -1) {
             const newHeirs = [...selectedHeirs];
             if (newHeirs[existingIndex].count > 1) {
                 newHeirs[existingIndex].count -= 1;
                 setSelectedHeirs(newHeirs);
             } else {
-                setSelectedHeirs(newHeirs.filter(h => h.relation !== relation));
+                setSelectedHeirs(newHeirs.filter(h => h.relation_type !== relType));
             }
         }
     };
@@ -89,23 +123,27 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
             </div>
 
             <div className="heir-selection-grid">
-                <div>
-                    <h3 className="serif" style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Relational Heir List</h3>
-                    <div className="heir-list">
-                        {filteredRelations.map(item => {
-                            const selected = selectedHeirs.find(h => h.relation === item.relation);
-                            return (
-                                <RelationCard 
-                                    key={item.relation}
-                                    relation={item.relation}
-                                    count={selected ? selected.count : 0}
-                                    max={item.max}
-                                    onAdd={() => handleAdd(item)}
-                                    onRemove={() => handleRemove(item.relation)}
-                                />
-                            );
-                        })}
-                    </div>
+                <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '1rem' }}>
+                    {categories.map(cat => (
+                        <div key={cat} className="mb-4">
+                            <h3 className="section-title serif" style={{ fontSize: '1.1rem', color: 'var(--secondary)' }}>{cat}</h3>
+                            <div className="heir-list">
+                                {filteredRelations.filter(r => r.category === cat).map(item => {
+                                    const selected = selectedHeirs.find(h => h.relation_type === item.relation_type);
+                                    return (
+                                        <RelationCard 
+                                            key={item.relation_type}
+                                            relation={item.relation}
+                                            count={selected ? selected.count : 0}
+                                            max={item.max}
+                                            onAdd={() => handleAdd(item)}
+                                            onRemove={() => handleRemove(item.relation_type)}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
                 </div>
 
                 <SelectionAudit heirs={selectedHeirs} />

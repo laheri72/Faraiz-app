@@ -1,6 +1,6 @@
 import React from 'react';
 import type { CalculationResult, VerificationData } from '../types';
-import { Book, Landmark, CheckCircle, AlertTriangle } from 'lucide-react';
+import { BookOpen, CheckCircle, RotateCcw, ShieldCheck } from 'lucide-react';
 
 interface Props {
     results: CalculationResult[];
@@ -10,49 +10,81 @@ interface Props {
 
 const ResultsView: React.FC<Props> = ({ results, verification, onBack }) => {
     return (
-        <div className="container results-view">
-            <h1 className="title">Distribution Results</h1>
-            <p className="subtitle">Individual shares calculated with 100% mathematical precision.</p>
+        <div className="animate-fade">
+            <h2 className="section-title serif">
+                <ShieldCheck size={22} color="var(--primary)" />
+                Final Distribution Decree
+            </h2>
+            <p className="text-muted mb-4">
+                The distribution below is based on the deterministic application of Fatemi Fiqh rules.
+            </p>
 
-            {verification && (
-                <div className={`verification-banner ${verification.status.toLowerCase()}`}>
-                    <div className="banner-main">
-                        {verification.status === 'VALID' ? <CheckCircle size={20} /> : <AlertTriangle size={20} />}
-                        <span>Distribution Integrity: <strong>{verification.status}</strong></span>
-                    </div>
-                    <div className="banner-details">
-                        <span>Estate: {verification.estate_total.toLocaleString()}</span>
-                        <span>Distributed: {verification.total_distributed.toLocaleString()}</span>
-                        <span>Sum: {verification.fraction_sum}</span>
-                    </div>
-                </div>
-            )}
-            
-            <div className="results-grid">
-                {results.map((res) => (
-                    <div key={res.heir_id} className="result-card">
+            <div className="distribution-list">
+                {results.map((res, i) => (
+                    <div key={i} className="distribution-card animate-fade" style={{ animationDelay: `${i * 0.1}s` }}>
                         <div className="header">
-                            <span className="relation">{res.relation} <small className="heir-id">#{res.heir_id.split('_')[1]}</small></span>
-                            <span className="share-tag">{res.share}</span>
+                            <div>
+                                <span className="relation">{res.relation}</span>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Heir ID: {res.heir_id}</div>
+                            </div>
+                            <span className="share serif">{res.share}</span>
                         </div>
-                        <div className="amount-section">
-                            <Landmark size={20} className="icon" />
-                            <span className="amount">{res.amount.toLocaleString()}</span>
+                        <div className="amount">
+                            {res.amount.toLocaleString()} <small style={{ fontSize: '0.9rem', fontWeight: 'normal' }}>Units</small>
                         </div>
-                        <div className="reasoning-section">
-                            <h4><Book size={16} /> Jurisprudence Basis</h4>
-                            <div className="arabic-list">
-                                {res.arabic_reasoning.map((text, i) => (
-                                    <p key={i} className="arabic-text" dir="rtl">{text}</p>
+                        
+                        {res.arabic_reasoning && res.arabic_reasoning.length > 0 && (
+                            <div className="rule-box">
+                                <h5 className="flex items-center gap-2">
+                                    <BookOpen size={14} /> Jurisprudence Rule
+                                </h5>
+                                {res.arabic_reasoning.map((text, idx) => (
+                                    <div key={idx} className="rule-item" style={{ marginBottom: '1rem' }}>
+                                        <p className="arabic-text">{text}</p>
+                                        <p style={{ fontSize: '0.85rem', color: 'var(--accent)', marginTop: '0.25rem' }}>
+                                            {res.rules_used[idx] || "Constitutional Rule"}
+                                        </p>
+                                    </div>
                                 ))}
                             </div>
-                        </div>
+                        )}
                     </div>
                 ))}
             </div>
 
-            <div className="footer-actions">
-                <button className="primary-btn" onClick={onBack}>New Calculation</button>
+            {verification && (
+                <div className="verification-panel">
+                    <h3 className="serif flex items-center justify-center gap-2">
+                        <CheckCircle size={20} color="var(--success)" />
+                        Verification Audit
+                    </h3>
+                    <div className="verification-grid">
+                        <div className="v-item">
+                            <span className="v-label">Net Estate</span>
+                            <span className="v-value">{verification.estate_total.toLocaleString()}</span>
+                        </div>
+                        <div className="v-item">
+                            <span className="v-label">Distributed</span>
+                            <span className="v-value">{verification.total_distributed.toLocaleString()}</span>
+                        </div>
+                        <div className="v-item">
+                            <span className="v-label">Fraction Sum</span>
+                            <span className="v-value">{verification.fraction_sum}</span>
+                        </div>
+                    </div>
+                    <div style={{ marginTop: '1.5rem', fontWeight: '800', color: verification.status === 'VALID' ? 'var(--success)' : 'var(--error)' }}>
+                        SYSTEM STATUS: {verification.status}
+                    </div>
+                </div>
+            )}
+
+            <div className="flex justify-center mt-4">
+                <button 
+                    className="btn-outline flex items-center gap-2" 
+                    onClick={onBack}
+                >
+                    <RotateCcw size={18} /> New Calculation
+                </button>
             </div>
         </div>
     );

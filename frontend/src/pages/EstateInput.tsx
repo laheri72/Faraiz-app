@@ -1,61 +1,64 @@
 import React, { useState } from 'react';
 
 interface Props {
-    onCalculate: (value: number, debts: number, wasiyyah: number) => void;
-    onBack: () => void;
+    initialData: { value: number, debts: number, wasiyyah: number };
+    onNext: (value: number, debts: number, wasiyyah: number) => void;
 }
 
-const EstateInput: React.FC<Props> = ({ onCalculate, onBack }) => {
-    const [value, setValue] = useState<string>('');
-    const [debts, setDebts] = useState<string>('');
-    const [wasiyyah, setWasiyyah] = useState<string>('');
+const EstateInput: React.FC<Props> = ({ initialData, onNext }) => {
+    const [value, setValue] = useState<string>(initialData.value ? initialData.value.toString() : '');
+    const [debts, setDebts] = useState<string>(initialData.debts ? initialData.debts.toString() : '');
+    const [wasiyyah, setWasiyyah] = useState<string>(initialData.wasiyyah ? initialData.wasiyyah.toString() : '');
 
     return (
-        <div className="container estate-input-view">
-            <h1 className="title">Estate Value & Deductions</h1>
-            <p className="subtitle">Enter the total estate value and any legal deductions (Layer 4).</p>
-            
-            <div className="input-card">
-                <div className="input-group">
-                    <label htmlFor="estate">Total Estate Amount</label>
-                    <input 
-                        type="number" 
-                        id="estate" 
-                        placeholder="e.g. 240000" 
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
-                    />
-                </div>
-                <div className="input-group">
-                    <label htmlFor="debts">Outstanding Debts (Paid First)</label>
-                    <input 
-                        type="number" 
-                        id="debts" 
-                        placeholder="e.g. 10000" 
-                        value={debts}
-                        onChange={(e) => setDebts(e.target.value)}
-                    />
-                </div>
-                <div className="input-group">
-                    <label htmlFor="wasiyyah">Wasiyyah (Will - Max 1/3)</label>
-                    <input 
-                        type="number" 
-                        id="wasiyyah" 
-                        placeholder="e.g. 20000" 
-                        value={wasiyyah}
-                        onChange={(e) => setWasiyyah(e.target.value)}
-                    />
-                </div>
+        <div className="animate-fade">
+            <h2 className="section-title serif">Step 1: Estate Information</h2>
+            <p className="text-muted mb-4">
+                Define the total value of the estate and any necessary legal deductions according to Layer 4 
+                of the engine's jurisprudence model.
+            </p>
+
+            <div className="form-group">
+                <label htmlFor="estate">Total Estate Amount</label>
+                <input 
+                    type="number" 
+                    id="estate" 
+                    placeholder="Enter total amount (e.g., 240,000)" 
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                />
             </div>
 
-            <div className="footer-actions">
-                <button className="secondary-btn" onClick={onBack}>Back</button>
+            <div className="form-group">
+                <label htmlFor="debts">Outstanding Debts & Funeral Expenses</label>
+                <input 
+                    type="number" 
+                    id="debts" 
+                    placeholder="Enter debts to be paid (e.g., 10,000)" 
+                    value={debts}
+                    onChange={(e) => setDebts(e.target.value)}
+                />
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="wasiyyah">Wasiyyah (Valid Will — Max 1/3)</label>
+                <input 
+                    type="number" 
+                    id="wasiyyah" 
+                    placeholder="Enter will amount if applicable (e.g., 20,000)" 
+                    value={wasiyyah}
+                    onChange={(e) => setWasiyyah(e.target.value)}
+                />
+            </div>
+
+            <div className="flex justify-between mt-4">
+                <div />
                 <button 
-                    className="primary-btn" 
+                    className="btn-primary" 
                     disabled={!value || parseFloat(value) <= 0}
-                    onClick={() => onCalculate(parseFloat(value), parseFloat(debts || '0'), parseFloat(wasiyyah || '0'))}
+                    onClick={() => onNext(parseFloat(value), parseFloat(debts || '0'), parseFloat(wasiyyah || '0'))}
                 >
-                    Calculate Inheritance
+                    Next: Define Heirs
                 </button>
             </div>
         </div>

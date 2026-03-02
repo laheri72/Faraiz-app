@@ -1,87 +1,162 @@
-import React, { useState } from 'react';
-import HeirSelection from './pages/HeirSelection';
-import EstateInput from './pages/EstateInput';
-import ResultsView from './pages/ResultsView';
+import React, { useState, useEffect } from 'react';
+import Home from './pages/Home';
+import HeirSelector from './pages/HeirSelector';
+import EstateForm from './pages/EstateForm';
+import CaseSummary from './pages/CaseSummary';
+import ResultsDisplay from './pages/ResultsDisplay';
+import JurisprudenceHeader from './components/JurisprudenceHeader';
+import JurisprudenceFooter from './components/JurisprudenceFooter';
 import { calculateInheritance } from './api/client';
 import type { HeirInput, CalculationResult, VerificationData } from './types';
 import './styles/App.css';
 
-type Screen = 'HEIRS' | 'ESTATE' | 'RESULTS' | 'LOADING';
+type Step = 'HOME' | 'ESTATE' | 'HEIRS' | 'SUMMARY' | 'RESULTS' | 'LOADING';
+
+interface CaseState {
+  step: Step;
+  estate: { value: number; debts: number; wasiyyah: number };
+  heirs: HeirInput[];
+  results: CalculationResult[];
+  verification: VerificationData | null;
+  error: string | null;
+}
+
+const INITIAL_STATE: CaseState = {
+  step: 'HOME',
+  estate: { value: 0, debts: 0, wasiyyah: 0 },
+  heirs: [],
+  results: [],
+  verification: null,
+  error: null
+};
 
 const App: React.FC = () => {
-  const [screen, setScreen] = useState<Screen>('HEIRS');
-  const [heirs, setHeirs] = useState<HeirInput[]>([]);
-  const [results, setResults] = useState<CalculationResult[]>([]);
-  const [verification, setVerification] = useState<VerificationData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [state, setState] = useState<CaseState>(() => {
+    const saved = localStorage.getItem('fatemi_wirasat_case');
+    return saved ? JSON.parse(saved) : INITIAL_STATE;
+  });
 
-  const handleHeirsSelected = (selectedHeirs: HeirInput[]) => {
-    setHeirs(selectedHeirs);
-    setScreen('ESTATE');
+  useEffect(() => {
+    // Persist state to localStorage on every change (except loading/results resets)
+    localStorage.setItem('fatemi_wirasat_case', JSON.stringify(state));
+  }, [state]);
+
+  const updateState = (updates: Partial<CaseState>) => {
+    setState(prev => ({ ...prev, ...updates }));
   };
 
-  const handleCalculate = async (estateValue: number, debts: number, wasiyyah: number) => {
-    setScreen('LOADING');
-    setError(null);
+  const handleEstateSubmit = (value: number, debts: number, wasiyyah: number) => {
+    updateState({ 
+        estate: { value, debts, wasiyyah },
+        step: 'HEIRS' 
+    });
+  };
+
+  const handleHeirsSubmit = (selectedHeirs: HeirInput[]) => {
+    updateState({ 
+        heirs: selectedHeirs,
+        step: 'SUMMARY' 
+    });
+  };
+
+  const handleCalculate = async () => {
+    updateState({ step: 'LOADING', error: null });
     try {
       const response = await calculateInheritance({
-        estate_value: estateValue,
-        debts: debts,
-        wasiyyah: wasiyyah,
-        heirs: heirs
+        estate_value: state.estate.value,
+        debts: state.estate.debts,
+        wasiyyah: state.estate.wasiyyah,
+        heirs: state.heirs
       });
       
       if (!response || !response.results) {
         throw new Error('Invalid response received from server.');
       }
 
-      setResults(response.results);
-      setVerification(response.verification || null);
-      setScreen('RESULTS');
+      updateState({
+        results: response.results,
+        verification: response.verification || null,
+        step: 'RESULTS'
+      });
     } catch (err: any) {
       console.error('Calculation Error:', err);
       const detail = err.response?.data?.detail || err.message || 'An error occurred during calculation.';
-      setError(detail);
-      setScreen('ESTATE');
+      updateState({ error: detail, step: 'SUMMARY' });
     }
   };
 
   const reset = () => {
-    setHeirs([]);
-    setResults([]);
-    setVerification(null);
-    setError(null);
-    setScreen('HEIRS');
+    setState(INITIAL_STATE);
+    localStorage.removeItem('fatemi_wirasat_case');
+  };
+
+  const getStepNumber = (): number => {
+    switch (state.step) {
+      case 'ESTATE': return 1;
+      case 'HEIRS': return 2;
+      case 'SUMMARY': return 3;
+      case 'LOADING': return 3;
+      case 'RESULTS': return 4;
+      default: return 0;
+    }
   };
 
   return (
     <div className="app-container">
-      {error && <div className="error-banner">{error}</div>}
-      
-      {screen === 'HEIRS' && (
-        <HeirSelection onNext={handleHeirsSelected} />
-      )}
-      
-      {screen === 'ESTATE' && (
-        <EstateInput 
-          onBack={() => setScreen('HEIRS')} 
-          onCalculate={handleCalculate} 
-        />
-      )}
-      
-      {screen === 'LOADING' && (
-        <div className="container loading-view">
-          <div className="loader">Calculating Jurisprudence...</div>
+      <JurisprudenceHeader step={getStepNumber()} />
+
+      {state.error && (
+        <div className="error-banner" style={{ color: 'var(--error)', margin: '1rem', fontWeight: 'bold', background: '#fee2e2', padding: '1rem', borderRadius: '0.25rem' }}>
+          {state.error}
         </div>
       )}
       
-      {screen === 'RESULTS' && (
-        <ResultsView 
-          results={results} 
-          verification={verification}
-          onBack={reset} 
-        />
-      )}
+      <main className="container animate-fade">
+        {state.step === 'HOME' && (
+          <Home onStart={() => updateState({ step: 'ESTATE' })} />
+        )}
+        
+        {state.step === 'ESTATE' && (
+          <EstateForm 
+            initialData={state.estate}
+            onNext={handleEstateSubmit} 
+          />
+        )}
+
+        {state.step === 'HEIRS' && (
+          <HeirSelector 
+            currentHeirs={state.heirs}
+            onBack={() => updateState({ step: 'ESTATE' })}
+            onHeirChange={handleHeirsSubmit} 
+          />
+        )}
+
+        {state.step === 'SUMMARY' && (
+          <CaseSummary 
+            caseState={{ estate: state.estate, heirs: state.heirs }}
+            onBack={() => updateState({ step: 'HEIRS' })}
+            onCalculate={handleCalculate}
+          />
+        )}
+        
+        {state.step === 'LOADING' && (
+          <div className="text-center" style={{ padding: '4rem 0' }}>
+            <h2 className="serif">Processing Jurisprudence...</h2>
+            <p>Applying the rules of Fatemi Fiqh to the provided case.</p>
+            <div className="loader mt-4" style={{ fontSize: '2rem' }}>⏳</div>
+          </div>
+        )}
+        
+        {state.step === 'RESULTS' && (
+          <ResultsDisplay 
+            results={state.results} 
+            verification={state.verification}
+            onBack={reset} 
+          />
+        )}
+      </main>
+
+      <JurisprudenceFooter />
     </div>
   );
 };

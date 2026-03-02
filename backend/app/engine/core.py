@@ -154,9 +154,9 @@ KNOWLEDGE_BASE: List[Rule] = [
     ),
     Rule(
         rule_id="L2-FATHER-REMAINDER", priority=740, category="allocation", slot="father_fixed",
-        conditions={"all": [RuleCondition(fact="exists", relation="Father", operator="==", value=True), RuleCondition(fact="has_descendants", operator="==", value=False)]},
+        conditions={"all": [RuleCondition(fact="exists", relation="Father", operator="==", value=True)]},
         actions=[RuleAction(type="assign_remainder", target="Father")],
-        arabic_text="والأب أقرب فيأخذ ما بقي", meaning="Father receives remainder when no descendants exist"
+        arabic_text="والأب أقرب فيأخذ ما بقي", meaning="Father receives remainder when he exists"
     ),
 
     # --- LAYER 3: CLASS 2 (SIBLINGS) ---
@@ -168,7 +168,13 @@ KNOWLEDGE_BASE: List[Rule] = [
     ),
     Rule(
         rule_id="L3-SIBLINGS-ALLOC", priority=1100, category="allocation", slot="class2_fixed",
-        conditions={"all": [RuleCondition(fact="exists_class", target_class="siblings", operator="==", value=True)]},
+        conditions={
+            "all": [
+                RuleCondition(fact="exists_class", target_class="siblings", operator="==", value=True),
+                RuleCondition(fact="exists", relation="Father", operator="==", value=False),
+                RuleCondition(fact="has_descendants", operator="==", value=False)
+            ]
+        },
         actions=[RuleAction(type="assign_remainder", target="Siblings")],
         arabic_text="فالميراث للإخوة", meaning="Siblings inherit remainder if Class 1 absent"
     ),
@@ -326,7 +332,8 @@ class MathEngine:
             if rule_obj: applied_arabic.append(rule_obj.arabic_text)
 
         for h in sorted_valid_heirs:
-            if h.relation in state.excluded_relations: continue
+            if h.relation in state.excluded_relations: 
+                continue
             effective_rel = state.virtual_mappings.get(h.relation, h.relation)
             share_val_for_relation_block = Fraction(0)
             

@@ -1,31 +1,30 @@
 import React, { useState, useMemo } from 'react';
 import type { HeirInput } from '../types';
-import { PlusCircle, MinusCircle, User, Users } from 'lucide-react';
+import { Plus, Minus, User, HelpCircle } from 'lucide-react';
 
 interface Props {
+    initialHeirs: HeirInput[];
+    onBack: () => void;
     onNext: (heirs: HeirInput[]) => void;
 }
 
 const AVAILABLE_RELATIONS = [
-    { relation: 'Son', gender: 'M', max: 20 },
-    { relation: 'Daughter', gender: 'F', max: 20 },
     { relation: 'Father', gender: 'M', max: 1 },
     { relation: 'Mother', gender: 'F', max: 1 },
     { relation: 'Husband', gender: 'M', max: 1 },
     { relation: 'Wife', gender: 'F', max: 4 },
+    { relation: 'Son', gender: 'M', max: 20 },
+    { relation: 'Daughter', gender: 'F', max: 20 },
     { relation: 'Brother', gender: 'M', max: 20 },
     { relation: 'Sister', gender: 'F', max: 20 },
-    { relation: 'Grandson', gender: 'M', max: 20 },
-    { relation: 'Granddaughter', gender: 'F', max: 20 },
     { relation: 'Uncle', gender: 'M', max: 20 },
     { relation: 'Cousin', gender: 'M', max: 20 },
-    { relation: 'Nephew', gender: 'M', max: 20 },
-    { relation: 'Dhawu_Arham', gender: 'M', max: 20 }
+    { relation: 'Dhawu al-Arham', gender: 'M', max: 1 }
 ];
 
-const HeirSelection: React.FC<Props> = ({ onNext }) => {
-    const [deceasedGender, setDeceasedGender] = useState<'M' | 'F' | null>(null);
-    const [selectedHeirs, setSelectedHeirs] = useState<HeirInput[]>([]);
+const HeirSelection: React.FC<Props> = ({ initialHeirs, onBack, onNext }) => {
+    const [deceasedGender, setDeceasedGender] = useState<'M' | 'F' | null>(initialHeirs.length > 0 ? (initialHeirs.some(h => h.relation === 'Husband') ? 'F' : 'M') : null);
+    const [selectedHeirs, setSelectedHeirs] = useState<HeirInput[]>(initialHeirs);
 
     const filteredRelations = useMemo(() => {
         if (!deceasedGender) return [];
@@ -55,36 +54,24 @@ const HeirSelection: React.FC<Props> = ({ onNext }) => {
             const newHeirs = [...selectedHeirs];
             if (newHeirs[existingIndex].count > 1) {
                 newHeirs[existingIndex].count -= 1;
+                setSelectedHeirs(newHeirs);
             } else {
-                newHeirs.splice(existingIndex, 1);
+                setSelectedHeirs(newHeirs.filter(h => h.relation !== relation));
             }
-            setSelectedHeirs(newHeirs);
         }
-    };
-
-    const toggleSpecialFlag = (relation: string, flag: keyof HeirInput) => {
-        const newHeirs = selectedHeirs.map(h => {
-            if (h.relation === relation) {
-                return { ...h, [flag]: !h[flag] };
-            }
-            return h;
-        });
-        setSelectedHeirs(newHeirs);
     };
 
     if (!deceasedGender) {
         return (
-            <div className="container center">
-                <h1 className="title">Whose Inheritance?</h1>
-                <p className="subtitle">Select the gender of the deceased to begin.</p>
-                <div className="gender-selector">
-                    <button className="gender-btn male" onClick={() => setDeceasedGender('M')}>
-                        <User size={48} />
-                        <span>Male (Marhum)</span>
+            <div className="animate-fade">
+                <h2 className="section-title serif">Initial Identification</h2>
+                <p className="text-muted mb-4">Please identify the gender of the deceased (Marhum/Marhuma).</p>
+                <div className="flex gap-2 justify-center mt-4">
+                    <button className="btn-outline flex items-center gap-2" onClick={() => setDeceasedGender('M')}>
+                        <User size={18} /> Male deceased
                     </button>
-                    <button className="gender-btn female" onClick={() => setDeceasedGender('F')}>
-                        <User size={48} />
-                        <span>Female (Marhuma)</span>
+                    <button className="btn-outline flex items-center gap-2" onClick={() => setDeceasedGender('F')}>
+                        <User size={18} /> Female deceased
                     </button>
                 </div>
             </div>
@@ -92,102 +79,85 @@ const HeirSelection: React.FC<Props> = ({ onNext }) => {
     }
 
     return (
-        <div className="container">
-            <h1 className="title">Select Heirs</h1>
-            <p className="subtitle">
-                Adding heirs for a <strong>{deceasedGender === 'M' ? 'Male' : 'Female'}</strong> deceased.
-                <button className="text-link" onClick={() => {setDeceasedGender(null); setSelectedHeirs([]);}}>Change</button>
+        <div className="animate-fade">
+            <h2 className="section-title serif">Step 2: Heir Selection</h2>
+            <p className="text-muted mb-4">
+                Define the surviving family members of the deceased <strong>({deceasedGender === 'M' ? 'Marhum' : 'Marhuma'})</strong>.
+                The engine will apply exclusion rules automatically.
+                <button className="text-link" style={{ marginLeft: '1rem', color: 'var(--secondary)' }} onClick={() => {setDeceasedGender(null); setSelectedHeirs([]);}}>Change gender</button>
             </p>
-            
-            <div className="selection-grid">
-                <div className="available-heirs">
-                    <div className="section-header">
-                        <PlusCircle size={20} />
-                        <h3>Potential Heirs</h3>
-                    </div>
-                    <div className="list scrollable">
+
+            <div className="heir-selection-grid">
+                <div>
+                    <h3 className="serif" style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Relational Heir List</h3>
+                    <div className="heir-list">
                         {filteredRelations.map(item => {
                             const selected = selectedHeirs.find(h => h.relation === item.relation);
-                            const isMax = selected && selected.count >= item.max;
+                            const count = selected ? selected.count : 0;
+                            const isMax = count >= item.max;
+
                             return (
-                                <div 
-                                    key={item.relation} 
-                                    className={`heir-item ${isMax ? 'disabled' : ''}`}
-                                    onClick={() => !isMax && addHeir(item.relation, item.gender, item.max)}
-                                >
-                                    <div className="relation-info">
-                                        <span className="relation-name">{item.relation}</span>
-                                        <span className="relation-meta">{item.max === 1 ? 'Unique' : `Max ${item.max}`}</span>
+                                <div key={item.relation} className="heir-card">
+                                    <div className="info">
+                                        <span className="name">{item.relation}</span>
+                                        <small className="text-muted">{item.max > 1 ? `Up to ${item.max}` : 'Unique relation'}</small>
                                     </div>
-                                    <PlusCircle className="icon" size={20} />
+                                    <div className="count-actions">
+                                        <button 
+                                            className="btn-icon" 
+                                            disabled={count === 0} 
+                                            onClick={() => removeHeir(item.relation)}
+                                        >
+                                            <Minus size={14} />
+                                        </button>
+                                        <span style={{ fontWeight: '800', minWidth: '1.5rem', textAlign: 'center' }}>{count}</span>
+                                        <button 
+                                            className="btn-icon" 
+                                            disabled={isMax} 
+                                            onClick={() => addHeir(item.relation, item.gender, item.max)}
+                                        >
+                                            <Plus size={14} />
+                                        </button>
+                                    </div>
                                 </div>
                             );
                         })}
                     </div>
                 </div>
 
-                <div className="selected-heirs">
-                    <div className="section-header">
-                        <Users size={20} />
-                        <h3>Surviving Family</h3>
-                    </div>
-                    <div className="list">
+                <div>
+                    <div style={{ background: 'var(--bg)', padding: '1.5rem', border: '1px dashed var(--gold)', borderRadius: '0.25rem' }}>
+                        <h4 className="serif flex items-center gap-2" style={{ color: 'var(--secondary)' }}>
+                            <HelpCircle size={18} /> Note on Identification
+                        </h4>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                            Ensure all surviving relatives are entered, even if they may be excluded (Mahjub). 
+                            The engine will apply layer-by-layer exclusionary logic according to the 
+                            jurisprudence rules.
+                        </p>
+                        <hr style={{ border: 'none', borderTop: '1px solid var(--gold)', margin: '1rem 0' }} />
+                        <h4 className="serif" style={{ fontSize: '1rem', color: 'var(--primary)' }}>Currently Entered</h4>
                         {selectedHeirs.length === 0 ? (
-                            <div className="empty-state">
-                                <p>No heirs selected. Click on potential heirs to add them.</p>
-                            </div>
+                            <p style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>No heirs identified yet.</p>
                         ) : (
-                            selectedHeirs.map(heir => {
-                                const relConfig = AVAILABLE_RELATIONS.find(r => r.relation === heir.relation);
-                                return (
-                                    <div key={heir.relation} className="selected-item-card">
-                                        <div className="item-main">
-                                            <div className="count-ctrl">
-                                                <button onClick={() => removeHeir(heir.relation)}><MinusCircle size={18} /></button>
-                                                <span className="count">{heir.count}</span>
-                                                <button 
-                                                    disabled={relConfig && heir.count >= relConfig.max}
-                                                    onClick={() => relConfig && addHeir(heir.relation, heir.gender, relConfig.max)}
-                                                >
-                                                    <PlusCircle size={18} />
-                                                </button>
-                                            </div>
-                                            <span className="name">{heir.relation}</span>
-                                        </div>
-                                        
-                                        <div className="special-flags">
-                                            <label className={`flag ${heir.is_killer ? 'active' : ''}`}>
-                                                <input type="checkbox" checked={!!heir.is_killer} onChange={() => toggleSpecialFlag(heir.relation, 'is_killer')} />
-                                                <span>Killer</span>
-                                            </label>
-                                            <label className={`flag ${heir.is_different_religion ? 'active' : ''}`}>
-                                                <input type="checkbox" checked={!!heir.is_different_religion} onChange={() => toggleSpecialFlag(heir.relation, 'is_different_religion')} />
-                                                <span>Non-Muslim</span>
-                                            </label>
-                                            <label className={`flag ${heir.is_missing ? 'active' : ''}`}>
-                                                <input type="checkbox" checked={!!heir.is_missing} onChange={() => toggleSpecialFlag(heir.relation, 'is_missing')} />
-                                                <span>Missing</span>
-                                            </label>
-                                            <label className={`flag ${heir.is_illegitimate ? 'active' : ''}`}>
-                                                <input type="checkbox" checked={!!heir.is_illegitimate} onChange={() => toggleSpecialFlag(heir.relation, 'is_illegitimate')} />
-                                                <span>Illegitimate</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                );
-                            })
+                            <ul style={{ fontSize: '0.9rem', paddingLeft: '1.2rem' }}>
+                                {selectedHeirs.map(h => (
+                                    <li key={h.relation}>{h.count} {h.relation}{h.count > 1 ? 's' : ''}</li>
+                                ))}
+                            </ul>
                         )}
                     </div>
                 </div>
             </div>
 
-            <div className="footer-actions">
+            <div className="flex justify-between mt-4">
+                <button className="btn-outline" onClick={onBack}>Back: Estate</button>
                 <button 
-                    className="primary-btn big" 
+                    className="btn-primary" 
                     disabled={selectedHeirs.length === 0}
                     onClick={() => onNext(selectedHeirs)}
                 >
-                    Continue to Financials
+                    Next: Case Summary
                 </button>
             </div>
         </div>

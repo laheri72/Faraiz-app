@@ -18,6 +18,7 @@ backend/*.egg-info/
 
 # Root
 node_modules/
+.firebase/
 .DS_Store
 Thumbs.db
 .vscode/

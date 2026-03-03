@@ -12,14 +12,8 @@ app = FastAPI(title="Fatemi Wirasat Engine")
 # Configure CORS for Frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://faraiz-app.web.app",
-        "https://faraiz-app.firebaseapp.com",
-        "*" # Fallback (optional, but good for testing)
-    ],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_origins=["*"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 

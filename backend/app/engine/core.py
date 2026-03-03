@@ -33,6 +33,17 @@ KNOWLEDGE_BASE: List[Rule] = [
 
     # --- LAYER 0: MAHJUB ENGINE (100-499) ---
     Rule(
+        rule_id="M0-DESCENDANT-PROXIMITY", priority=95, category="blocking",
+        conditions={"any": [RuleCondition(fact="count", relation="Son", operator=">=", value=1), RuleCondition(fact="count", relation="Daughter", operator=">=", value=1)]},
+        actions=[
+            RuleAction(type="blocking", target="Son_of_Son"),
+            RuleAction(type="blocking", target="Daughter_of_Son"),
+            RuleAction(type="blocking", target="Son_of_Daughter"),
+            RuleAction(type="blocking", target="Daughter_of_Daughter")
+        ],
+        arabic_text="الولد يحجب ولد الولد", meaning="Children block Grandchildren"
+    ),
+    Rule(
         rule_id="M1-CHILDREN-BLOCK-SIB", priority=100, category="blocking",
         conditions={"any": [RuleCondition(fact="has_descendants", operator="==", value=True)]},
         actions=[
@@ -73,7 +84,7 @@ KNOWLEDGE_BASE: List[Rule] = [
         },
         actions=[
             RuleAction(type="substitute_relation", source="Son_of_Son", as_relation="Son"),
-            RuleAction(type="substitute_relation", source="Daughter_of_Son", as_relation="Son"),
+            RuleAction(type="substitute_relation", source="Daughter_of_Son", as_relation="Daughter"),
             RuleAction(type="substitute_relation", source="Son_of_Daughter", as_relation="Daughter"),
             RuleAction(type="substitute_relation", source="Daughter_of_Daughter", as_relation="Daughter")
         ],
@@ -82,48 +93,15 @@ KNOWLEDGE_BASE: List[Rule] = [
 
     # --- LAYER 2: FIXED SHARES & ALLOCATION (600-899) ---
     Rule(
-        rule_id="F2-SINGLE-SON", priority=600, category="allocation", slot="descendant_fixed",
+        rule_id="F1-DESCENDANTS-ALLOC", priority=600, category="allocation", slot="descendant_fixed",
         conditions={
-            "all": [
-                RuleCondition(fact="count", relation="Son", operator="==", value=1),
-                RuleCondition(fact="count", relation="Daughter", operator="==", value=0)
-            ]
-        },
-        actions=[RuleAction(type="assign_remainder", target="Son")],
-        arabic_text="فإن لم يترك غير ولد واحد ذكر فالميراث له كله", meaning="Single son receives everything"
-    ),
-    Rule(
-        rule_id="F3-SINGLE-DAUGHTER", priority=610, category="allocation", slot="descendant_fixed",
-        conditions={
-            "all": [
-                RuleCondition(fact="count", relation="Daughter", operator="==", value=1),
-                RuleCondition(fact="count", relation="Son", operator="==", value=0)
-            ]
-        },
-        actions=[RuleAction(type="assign_fraction", target="Daughter", value="1/2", radd_eligible=True)],
-        arabic_text="فللابنة النصف بالميراث المسمى ويرد عليها", meaning="Single daughter receives 1/2 fixed and proportional Radd"
-    ),
-    Rule(
-        rule_id="F4-DAUGHTERS-ONLY", priority=620, category="allocation", slot="descendant_fixed",
-        conditions={
-            "all": [
-                RuleCondition(fact="count", relation="Daughter", operator=">=", value=2),
-                RuleCondition(fact="count", relation="Son", operator="==", value=0)
-            ]
-        },
-        actions=[RuleAction(type="assign_fraction", target="Daughter", value="2/3", radd_eligible=True)],
-        arabic_text="فلكل واحدة الثلث بالميراث ويرد عليهما", meaning="Multiple daughters share 2/3 fixed and proportional Radd"
-    ),
-    Rule(
-        rule_id="F1-SON-DAUGHTER", priority=630, category="allocation", slot="descendant_fixed",
-        conditions={
-            "all": [
+            "any": [
                 RuleCondition(fact="count", relation="Son", operator=">=", value=1),
                 RuleCondition(fact="count", relation="Daughter", operator=">=", value=1)
             ]
         },
-        actions=[RuleAction(type="assign_remainder", target="Children")],
-        arabic_text="للذكر مثل حظ الأنثيين", meaning="Sons and daughters share remainder in 2:1 ratio"
+        actions=[RuleAction(type="assign_remainder", target="Direct_Descendants")],
+        arabic_text="فللأولاد الباقي للذكر مثل حظ الأنثيين", meaning="Direct descendants take the remainder in 2:1 ratio"
     ),
     Rule(
         rule_id="L2-HUSBAND-CHILD", priority=700, category="allocation", slot="spouse_fixed",
@@ -169,9 +147,14 @@ KNOWLEDGE_BASE: List[Rule] = [
     ),
     Rule(
         rule_id="L2-FATHER-REMAINDER", priority=840, category="allocation", slot="father_fixed",
-        conditions={"all": [RuleCondition(fact="exists", relation="Father", operator="==", value=True)]},
+        conditions={
+            "all": [
+                RuleCondition(fact="exists", relation="Father", operator="==", value=True),
+                RuleCondition(fact="has_descendants", operator="==", value=False)
+            ]
+        },
         actions=[RuleAction(type="assign_remainder", target="Father")],
-        arabic_text="والأب أقرب فيأخذ ما بقي", meaning="Father receives remainder when he exists"
+        arabic_text="والأب أقرب فيأخذ ما بقي", meaning="Father receives remainder when no descendants exist"
     ),
 
     # --- LAYER 2.5: RADD OVERRIDES (850-899) ---
@@ -389,7 +372,7 @@ class MathEngine:
             if not blocking_info:
                 if effective_rel in ledger:
                     share_val = ledger[effective_rel]
-                elif effective_rel in ["Son", "Daughter"] and "Children" in ledger:
+                elif effective_rel in ["Son", "Daughter"] and "Direct_Descendants" in ledger:
                     def count_class(target_rel_type):
                         cnt = sum(x.count for x in state.valid_heirs if x.relation_type == target_rel_type and x.relation_type not in state.excluded_relations)
                         for src, as_rel in state.virtual_mappings.items():
@@ -399,7 +382,7 @@ class MathEngine:
                     sons = count_class("Son")
                     daughters = count_class("Daughter")
                     units = (sons * 2) + daughters
-                    individual_unit = ledger["Children"] / units
+                    individual_unit = ledger["Direct_Descendants"] / units
                     share_val = (individual_unit * (2 if effective_rel == "Son" else 1)) * h.count
                 elif effective_rel in ["Brother", "Sister"] and "Siblings" in ledger:
                     bros = sum(x.count for x in state.valid_heirs if x.relation_type == "Brother" and x.relation_type not in state.excluded_relations)

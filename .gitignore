@@ -6,15 +6,15 @@ frontend/.vite/
 frontend/*.local
 
 # Backend
-backend/__pycache__/
-backend/*.py[cod]
-backend/*$py.class
-backend/.venv/
-backend/.pytest_cache/
-backend/faraiz.db
-backend/build/
-backend/dist/
-backend/*.egg-info/
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.pytest_cache/
+faraiz.db
+build/
+dist/
+*.egg-info/
 
 # Root
 node_modules/

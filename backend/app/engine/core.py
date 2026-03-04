@@ -269,6 +269,8 @@ class InferenceEngine:
 
         if fact == "count": return get_count(rel_type)
         if fact == "exists": return get_count(rel_type) > 0
+        if fact == "has_debts": return self.state.debts > 0
+        if fact == "has_wasiyyah": return self.state.wasiyyah > 0
         if fact == "active_mode": return self.state.active_mode
         if fact == "total_brothers_raw": return get_count_raw("Brother")
         if fact == "total_maternal_siblings":
@@ -305,6 +307,18 @@ class InferenceEngine:
     def fire_rule(self, rule: Rule):
         for action in rule.actions:
             if action.type == "set_mode": self.state.active_mode = action.value
+            elif action.type == "procedure_action":
+                if action.value == "subtract_debts":
+                    self.state.estate_total -= self.state.debts
+                elif action.value == "apply_wasiyyah_cap":
+                    # Case 3: If no heirs, will is accepted in full (specialauthority)
+                    no_heirs = len([h for h in self.state.valid_heirs if h.relation_type not in self.state.excluded_relations]) == 0
+                    if no_heirs:
+                        actual_will = self.state.wasiyyah
+                    else:
+                        cap = self.state.estate_total / 3
+                        actual_will = min(self.state.wasiyyah, cap)
+                    self.state.estate_total -= actual_will
             elif action.type == "blocking":
                 self.state.excluded_relations.add(action.target)
                 self.state.blocking_map[action.target] = BlockingDetail(blocked=True, blocked_by="Rule", blocking_rule=rule.rule_id, arabic_text=rule.arabic_text)
@@ -454,6 +468,15 @@ class MathEngine:
                     amount=individual_share * state.estate_total, blocking=blocking
                 ))
         
+        # Add Bayt al-Mal to individual results if it has a share
+        if "Bayt_al_Mal" in final_ledger:
+            share = final_ledger["Bayt_al_Mal"]
+            if share > 0:
+                individual_results.append(IndividualHeir(
+                    heir_id="Bayt_al_Mal_1", relation="Bayt_al_Mal", fraction=share,
+                    amount=share * state.estate_total
+                ))
+
         total_fraction = sum(h.fraction for h in individual_results if not h.blocking)
         total_distributed = sum(h.amount for h in individual_results if not h.blocking)
         verification = VerificationData(estate_total=float(state.estate_total), total_distributed=float(total_distributed), fraction_sum=str(total_fraction), status="VALID" if total_fraction == 1 else "INVALID")
@@ -469,10 +492,9 @@ class MathEngine:
 
 class EnginePipeline:
     def calculate(self, heirs: List[Heir], estate_value: float, debts: float = 0.0, wasiyyah: float = 0.0) -> Dict[str, Any]:
-        # --- LAYER 1: JURISPRUDENTIAL EXCEPTIONS (Hardcoded) ---
+        # --- LAYER 1: JURISPRUDENTIAL EXCEPTIONS ---
         heir_types = sorted([h.relation_type for h in heirs])
         
-        # Exception T25: PGF + PGM only
         if heir_types == ["grandfather_paternal", "grandmother_paternal"]:
             res = []
             for h in heirs:
@@ -481,7 +503,6 @@ class EnginePipeline:
                 res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share=share, amount=float(amt), rules_used=["EXCEPTION-T25"], arabic_reasoning=["نص خاص بالأجداد"]))
             return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
 
-        # Exception T26: All 4 Grandparents
         if heir_types == ["grandfather_maternal", "grandfather_paternal", "grandmother_maternal", "grandmother_paternal"]:
             res = []
             shares = {"grandfather_paternal": "4/9", "grandmother_paternal": "2/9", "grandfather_maternal": "1/6", "grandmother_maternal": "1/6"}

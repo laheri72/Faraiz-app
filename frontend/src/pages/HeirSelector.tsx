@@ -29,21 +29,27 @@ const AVAILABLE_RELATIONS: RelationInfo[] = [
     { relation: 'Son', relation_type: 'Son', lineage: 'direct', gender: 'M', max: 20, category: 'Children', generation_level: 1 },
     { relation: 'Daughter', relation_type: 'Daughter', lineage: 'direct', gender: 'F', max: 20, category: 'Children', generation_level: 1 },
 
-    // --- GRANDPARENTS (New Module) ---
+    // --- GRANDPARENTS ---
     { relation: 'PGF (Jad) [Father Side]', relation_type: 'grandfather_paternal', lineage: 'paternal', gender: 'M', max: 1, category: 'Grandparents', generation_level: 2 },
     { relation: 'PGM (Jaddah) [Father Side]', relation_type: 'grandmother_paternal', lineage: 'paternal', gender: 'F', max: 3, category: 'Grandparents', generation_level: 2 },
     { relation: 'MGF (Jad) [Mother Side]', relation_type: 'grandfather_maternal', lineage: 'maternal', gender: 'M', max: 1, category: 'Grandparents', generation_level: 2 },
     { relation: 'MGM (Jaddah) [Mother Side]', relation_type: 'grandmother_maternal', lineage: 'maternal', gender: 'F', max: 3, category: 'Grandparents', generation_level: 2 },
 
-    // --- DESCENDANTS (Substitution) ---
+    // --- DESCENDANTS ---
     { relation: 'Son of Son', relation_type: 'Son_of_Son', lineage: 'paternal_descendant', gender: 'M', max: 20, category: 'Grandchildren', generation_level: 2 },
     { relation: 'Daughter of Son', relation_type: 'Daughter_of_Son', lineage: 'paternal_descendant', gender: 'F', max: 20, category: 'Grandchildren', generation_level: 2 },
     { relation: 'Son of Daughter', relation_type: 'Son_of_Daughter', lineage: 'maternal_descendant', gender: 'M', max: 20, category: 'Grandchildren', generation_level: 2 },
     { relation: 'Daughter of Daughter', relation_type: 'Daughter_of_Daughter', lineage: 'maternal_descendant', gender: 'F', max: 20, category: 'Grandchildren', generation_level: 2 },
 
-    // --- SIBLINGS ---
+    // --- SIBLINGS (PATERNAL/FULL) ---
     { relation: 'Brother', relation_type: 'Brother', lineage: 'paternal', gender: 'M', max: 20, category: 'Siblings', generation_level: 1 },
     { relation: 'Sister', relation_type: 'Sister', lineage: 'paternal', gender: 'F', max: 20, category: 'Siblings', generation_level: 1 },
+    
+    // --- SIBLINGS (MATERNAL) ---
+    { relation: 'Maternal Brother', relation_type: 'Brother_Maternal', lineage: 'maternal', gender: 'M', max: 20, category: 'Maternal Sibs', generation_level: 1 },
+    { relation: 'Maternal Sister', relation_type: 'Sister_Maternal', lineage: 'maternal', gender: 'F', max: 20, category: 'Maternal Sibs', generation_level: 1 },
+
+    // --- NEPHEWS ---
     { relation: 'Son of Brother', relation_type: 'Son_of_Brother', lineage: 'paternal', gender: 'M', max: 20, category: 'Nephews', generation_level: 2 },
     { relation: 'Son of Sister', relation_type: 'Son_of_Sister', lineage: 'maternal', gender: 'M', max: 20, category: 'Nephews', generation_level: 2 },
 
@@ -168,7 +174,7 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
 
             <div className="action-area">
                 <button className="btn-outline" onClick={onBack}>Back: Estate</button>
-                <button className="btn-primary" disabled={selectedHeirs.length === 0} onClick={() => onHeirChange(selectedHeirs)}>
+                <button className="btn-primary" onClick={() => onHeirChange(selectedHeirs)}>
                     Next: Case Summary
                 </button>
             </div>

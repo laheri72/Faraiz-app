@@ -17,34 +17,41 @@ interface RelationInfo {
     gender: string;
     max: number;
     category: string;
+    generation_level: number;
 }
 
 const AVAILABLE_RELATIONS: RelationInfo[] = [
     // --- DIRECT ---
-    { relation: 'Father', relation_type: 'Father', lineage: 'direct', gender: 'M', max: 1, category: 'Parents' },
-    { relation: 'Mother', relation_type: 'Mother', lineage: 'direct', gender: 'F', max: 1, category: 'Parents' },
-    { relation: 'Husband', relation_type: 'Husband', lineage: 'direct', gender: 'M', max: 1, category: 'Spouse' },
-    { relation: 'Wife', relation_type: 'Wife', lineage: 'direct', gender: 'F', max: 4, category: 'Spouse' },
-    { relation: 'Son', relation_type: 'Son', lineage: 'direct', gender: 'M', max: 20, category: 'Children' },
-    { relation: 'Daughter', relation_type: 'Daughter', lineage: 'direct', gender: 'F', max: 20, category: 'Children' },
+    { relation: 'Father', relation_type: 'Father', lineage: 'direct', gender: 'M', max: 1, category: 'Parents', generation_level: 1 },
+    { relation: 'Mother', relation_type: 'Mother', lineage: 'direct', gender: 'F', max: 1, category: 'Parents', generation_level: 1 },
+    { relation: 'Husband', relation_type: 'Husband', lineage: 'direct', gender: 'M', max: 1, category: 'Spouse', generation_level: 1 },
+    { relation: 'Wife', relation_type: 'Wife', lineage: 'direct', gender: 'F', max: 4, category: 'Spouse', generation_level: 1 },
+    { relation: 'Son', relation_type: 'Son', lineage: 'direct', gender: 'M', max: 20, category: 'Children', generation_level: 1 },
+    { relation: 'Daughter', relation_type: 'Daughter', lineage: 'direct', gender: 'F', max: 20, category: 'Children', generation_level: 1 },
+
+    // --- GRANDPARENTS (New Module) ---
+    { relation: 'Paternal Grandfather (Jad)', relation_type: 'grandfather_paternal', lineage: 'paternal', gender: 'M', max: 1, category: 'Grandparents', generation_level: 2 },
+    { relation: 'Paternal Grandmother (Jaddah)', relation_type: 'grandmother_paternal', lineage: 'paternal', gender: 'F', max: 3, category: 'Grandparents', generation_level: 2 },
+    { relation: 'Maternal Grandfather (Jad)', relation_type: 'grandfather_maternal', lineage: 'maternal', gender: 'M', max: 1, category: 'Grandparents', generation_level: 2 },
+    { relation: 'Maternal Grandmother (Jaddah)', relation_type: 'grandmother_maternal', lineage: 'maternal', gender: 'F', max: 3, category: 'Grandparents', generation_level: 2 },
 
     // --- DESCENDANTS (Substitution) ---
-    { relation: 'Son of Son', relation_type: 'Son_of_Son', lineage: 'paternal_descendant', gender: 'M', max: 20, category: 'Grandchildren' },
-    { relation: 'Daughter of Son', relation_type: 'Daughter_of_Son', lineage: 'paternal_descendant', gender: 'F', max: 20, category: 'Grandchildren' },
-    { relation: 'Son of Daughter', relation_type: 'Son_of_Daughter', lineage: 'maternal_descendant', gender: 'M', max: 20, category: 'Grandchildren' },
-    { relation: 'Daughter of Daughter', relation_type: 'Daughter_of_Daughter', lineage: 'maternal_descendant', gender: 'F', max: 20, category: 'Grandchildren' },
+    { relation: 'Son of Son', relation_type: 'Son_of_Son', lineage: 'paternal_descendant', gender: 'M', max: 20, category: 'Grandchildren', generation_level: 2 },
+    { relation: 'Daughter of Son', relation_type: 'Daughter_of_Son', lineage: 'paternal_descendant', gender: 'F', max: 20, category: 'Grandchildren', generation_level: 2 },
+    { relation: 'Son of Daughter', relation_type: 'Son_of_Daughter', lineage: 'maternal_descendant', gender: 'M', max: 20, category: 'Grandchildren', generation_level: 2 },
+    { relation: 'Daughter of Daughter', relation_type: 'Daughter_of_Daughter', lineage: 'maternal_descendant', gender: 'F', max: 20, category: 'Grandchildren', generation_level: 2 },
 
     // --- SIBLINGS ---
-    { relation: 'Brother', relation_type: 'Brother', lineage: 'paternal', gender: 'M', max: 20, category: 'Siblings' },
-    { relation: 'Sister', relation_type: 'Sister', lineage: 'paternal', gender: 'F', max: 20, category: 'Siblings' },
-    { relation: 'Son of Brother', relation_type: 'Son_of_Brother', lineage: 'paternal', gender: 'M', max: 20, category: 'Nephews' },
-    { relation: 'Son of Sister', relation_type: 'Son_of_Sister', lineage: 'maternal', gender: 'M', max: 20, category: 'Nephews' },
+    { relation: 'Brother', relation_type: 'Brother', lineage: 'paternal', gender: 'M', max: 20, category: 'Siblings', generation_level: 1 },
+    { relation: 'Sister', relation_type: 'Sister', lineage: 'paternal', gender: 'F', max: 20, category: 'Siblings', generation_level: 1 },
+    { relation: 'Son of Brother', relation_type: 'Son_of_Brother', lineage: 'paternal', gender: 'M', max: 20, category: 'Nephews', generation_level: 2 },
+    { relation: 'Son of Sister', relation_type: 'Son_of_Sister', lineage: 'maternal', gender: 'M', max: 20, category: 'Nephews', generation_level: 2 },
 
     // --- EXTENDED ---
-    { relation: 'Paternal Uncle', relation_type: 'Paternal_Uncle', lineage: 'paternal', gender: 'M', max: 20, category: 'Uncles/Aunts' },
-    { relation: 'Paternal Aunt', relation_type: 'Paternal_Aunt', lineage: 'paternal', gender: 'F', max: 20, category: 'Uncles/Aunts' },
-    { relation: 'Maternal Uncle', relation_type: 'Maternal_Uncle', lineage: 'maternal', gender: 'M', max: 20, category: 'Uncles/Aunts' },
-    { relation: 'Maternal Aunt', relation_type: 'Maternal_Aunt', lineage: 'maternal', gender: 'F', max: 20, category: 'Uncles/Aunts' }
+    { relation: 'Paternal Uncle', relation_type: 'Paternal_Uncle', lineage: 'paternal', gender: 'M', max: 20, category: 'Uncles/Aunts', generation_level: 2 },
+    { relation: 'Paternal Aunt', relation_type: 'Paternal_Aunt', lineage: 'paternal', gender: 'F', max: 20, category: 'Uncles/Aunts', generation_level: 2 },
+    { relation: 'Maternal Uncle', relation_type: 'Maternal_Uncle', lineage: 'maternal', gender: 'M', max: 20, category: 'Uncles/Aunts', generation_level: 2 },
+    { relation: 'Maternal Aunt', relation_type: 'Maternal_Aunt', lineage: 'maternal', gender: 'F', max: 20, category: 'Uncles/Aunts', generation_level: 2 }
 ];
 
 const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) => {
@@ -66,7 +73,7 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
     }, [filteredRelations]);
 
     const handleAdd = (item: RelationInfo) => {
-        const existingIndex = selectedHeirs.findIndex(h => h.relation_type === item.relation_type);
+        const existingIndex = selectedHeirs.findIndex(h => h.relation_type === item.relation_type && h.generation_level === item.generation_level);
         if (existingIndex !== -1) {
             const newHeirs = [...selectedHeirs];
             newHeirs[existingIndex].count += 1;
@@ -77,7 +84,8 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
                 relation_type: item.relation_type,
                 lineage: item.lineage,
                 gender: item.gender, 
-                count: 1 
+                count: 1,
+                generation_level: item.generation_level
             }]);
         }
     };

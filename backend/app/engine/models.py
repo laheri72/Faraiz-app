@@ -8,6 +8,7 @@ class Heir(BaseModel):
     lineage: str    # "paternal", "maternal", "paternal_descendant", "maternal_descendant", "direct"
     gender: str    # "M" or "F"
     count: int = 1
+    generation_level: int = 1 # 1 for children/parents, 2 for grandparents/grandchildren
     # Special conditions (Layer 4)
     is_killer: bool = False
     is_different_religion: bool = False
@@ -38,7 +39,7 @@ class RuleCondition(BaseModel):
     value: Any
 
 class RuleAction(BaseModel):
-    type: str # assign_fraction, assign_remainder, exclude_heir, mark_blocked, flag_radd, substitute_relation, procedure_action, blocking
+    type: str # assign_fraction, assign_remainder, exclude_heir, mark_blocked, flag_radd, substitute_relation, procedure_action, blocking, set_mode
     target: Optional[str] = None
     value: Optional[str] = None # For fraction strings like "1/2"
     radd_eligible: bool = False
@@ -48,7 +49,8 @@ class RuleAction(BaseModel):
 class Rule(BaseModel):
     rule_id: str
     priority: int
-    category: str # eligibility, substitution, exclusion, allocation, final, blocking
+    category: str # eligibility, substitution, exclusion, allocation, final, blocking, mode_activation
+    mode: str = "GLOBAL" # GLOBAL, MODE_A, MODE_B, etc.
     slot: Optional[str] = None # logical slot to prevent overwrites (e.g., descendant_fixed)
     conditions: Dict[str, List[RuleCondition]] # "all", "any", "none"
     actions: List[RuleAction]
@@ -61,6 +63,7 @@ class CaseState(BaseModel):
     wasiyyah: Fraction = Field(default=Fraction(0))
     heirs: List[Heir]
     valid_heirs: List[Heir] = []
+    active_mode: Optional[str] = None
     
     # Decisions Ledger
     assigned_fractions: Dict[str, Fraction] = {} # relation -> fraction

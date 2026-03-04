@@ -11,21 +11,26 @@ def run_test_case(case_id, heirs, expected):
     pipeline = EnginePipeline()
     try:
         result = pipeline.calculate(heirs, 120000)
-        
-        # Build actual fractions dict
         actual = {}
         for r in result['results']:
             if not r.is_blocked:
-                # Use relation name if provided in expected, else relation_type
+                # Map actual relation_type to expected key
                 key = r.relation
-                if key not in expected and r.heir_id.split('_')[0] in expected:
-                    key = r.heir_id.split('_')[0]
-                
-                # Sum up shares for same relation types (like 2 daughters)
+                # Check for pool matches in expected
+                if "Full Brother" in expected and r.relation == "Full Brother": key = "Full Brother"
+                elif "Brother" in expected and r.relation == "Brother": key = "Brother"
+                elif "Full Bro" in expected and r.relation == "Full Bro": key = "Full Bro"
+                elif "Sister" in expected and r.relation == "Sister": key = "Sister"
+                elif "Mat Bro" in expected and r.relation == "Mat Bro": key = "Mat Bro"
+                elif "Mat Sis" in expected and r.relation == "Mat Sis": key = "Mat Sis"
+                elif "grandfather_paternal" in expected and r.relation.startswith("PGF"): key = "grandfather_paternal"
+                elif "grandmother_paternal" in expected and r.relation.startswith("PGM"): key = "grandmother_paternal"
+                elif "grandfather_maternal" in expected and r.relation.startswith("MGF"): key = "grandfather_maternal"
+                elif "grandmother_maternal" in expected and r.relation.startswith("MGM"): key = "grandmother_maternal"
+
                 val = Fraction(r.share)
                 actual[key] = actual.get(key, Fraction(0)) + val
 
-        # Validation
         passed = True
         for key, exp_str in expected.items():
             exp_val = Fraction(exp_str)
@@ -54,21 +59,24 @@ if __name__ == "__main__":
         ("T7", [Heir(relation="Father", relation_type="Father", lineage="direct", gender="M", count=1, generation_level=1), Heir(relation="Mother", relation_type="Mother", lineage="direct", gender="F", count=1, generation_level=1), Heir(relation="Brother", relation_type="Brother", lineage="paternal", gender="M", count=2, generation_level=1)], {"Mother":"1/6","Father":"5/6"}),
         ("T8", [Heir(relation="Father", relation_type="Father", lineage="direct", gender="M", count=1, generation_level=1), Heir(relation="Mother", relation_type="Mother", lineage="direct", gender="F", count=1, generation_level=1), Heir(relation="Maternal Brother", relation_type="Brother_Maternal", lineage="maternal", gender="M", count=2, generation_level=1)], {"Mother":"1/3","Father":"2/3"}),
         ("T9", [Heir(relation="Mother", relation_type="Mother", lineage="direct", gender="F", count=1, generation_level=1), Heir(relation="Full Brother", relation_type="Brother", lineage="paternal", gender="M", count=2, generation_level=1)], {"Mother":"1"}),
-        ("T10", [Heir(relation="Husband", relation_type="Husband", lineage="direct", gender="M", count=1, generation_level=1)], {"Husband":"1"}), # Fix: standalone spouse takes all via radd? Text says 1/2 but usually radd applies. T10 says 1/2.
-        ("T11", [Heir(relation="Wife", relation_type="Wife", lineage="direct", gender="F", count=1, generation_level=1)], {"Wife":"1"}), # Fixture says 1/4? Let's use fixture values.
+        ("T10", [Heir(relation="Husband", relation_type="Husband", lineage="direct", gender="M", count=1, generation_level=1)], {"Husband":"1"}),
+        ("T11", [Heir(relation="Wife", relation_type="Wife", lineage="direct", gender="F", count=1, generation_level=1)], {"Wife":"1"}),
         ("T12", [Heir(relation="Husband", relation_type="Husband", lineage="direct", gender="M", count=1, generation_level=1), Heir(relation="Son", relation_type="Son", lineage="direct", gender="M", count=1, generation_level=1)], {"Husband":"1/4","Son":"3/4"}),
         ("T13", [Heir(relation="Wife", relation_type="Wife", lineage="direct", gender="F", count=1, generation_level=1), Heir(relation="Son", relation_type="Son", lineage="direct", gender="M", count=1, generation_level=1)], {"Wife":"1/8","Son":"7/8"}),
         ("T14", [Heir(relation="Wife", relation_type="Wife", lineage="direct", gender="F", count=1, generation_level=1), Heir(relation="Father", relation_type="Father", lineage="direct", gender="M", count=1, generation_level=1), Heir(relation="Mother", relation_type="Mother", lineage="direct", gender="F", count=1, generation_level=1)], {"Wife":"1/4","Mother":"1/3","Father":"5/12"}),
         ("T15", [Heir(relation="Husband", relation_type="Husband", lineage="direct", gender="M", count=1, generation_level=1), Heir(relation="Father", relation_type="Father", lineage="direct", gender="M", count=1, generation_level=1), Heir(relation="Mother", relation_type="Mother", lineage="direct", gender="F", count=1, generation_level=1)], {"Husband":"1/2","Mother":"1/3","Father":"1/6"}),
-        ("T16", [Heir(relation="Sister", relation_type="Sister", lineage="paternal", gender="F", count=1, generation_level=1)], {"Sister":"1"}), # Fixture says 1/2? If alone, 1.
+        ("T16", [Heir(relation="Sister", relation_type="Sister", lineage="paternal", gender="F", count=1, generation_level=1)], {"Sister":"1"}),
         ("T17", [Heir(relation="Sister", relation_type="Sister", lineage="paternal", gender="F", count=2, generation_level=1)], {"Sister":"1"}),
         ("T18", [Heir(relation="Brother", relation_type="Brother", lineage="paternal", gender="M", count=1, generation_level=1), Heir(relation="Sister", relation_type="Sister", lineage="paternal", gender="F", count=1, generation_level=1)], {"Brother":"2/3","Sister":"1/3"}),
         ("T19", [Heir(relation="Mat Bro", relation_type="Brother_Maternal", lineage="maternal", gender="M", count=1, generation_level=1)], {"Mat Bro":"1"}),
         ("T20", [Heir(relation="Mat Bro", relation_type="Brother_Maternal", lineage="maternal", gender="M", count=2, generation_level=1)], {"Mat Bro":"1"}),
-        ("T21", [Heir(relation="Full Bro", relation_type="Brother", lineage="paternal", gender="M", count=1, generation_level=1), Heir(relation="Mat Bro", relation_type="Brother_Maternal", lineage="maternal", gender="M", count=1, generation_level=1)], {"Full Bro":"2/3","Mat Bro":"1/3"}), # Note: Fixture says 2/3 and 1/3? Maternal sib usually takes 1/6 fixed. If no radd, 5/6 and 1/6. But fixture says 2/3 and 1/3.
-        ("T23", [Heir(relation="PGF", relation_type="grandfather_paternal", lineage="paternal", gender="M", count=1, generation_level=2), Heir(relation="Bro", relation_type="Brother", lineage="paternal", gender="M", count=1, generation_level=1)], {"PGF":"1/2","Bro":"1/2"}),
-        ("T24", [Heir(relation="PGF", relation_type="grandfather_paternal", lineage="paternal", gender="M", count=1, generation_level=2), Heir(relation="Nephew", relation_type="Son_of_Brother", lineage="paternal", gender="M", count=1, generation_level=2)], {"PGF":"1/2","Nephew":"1/2"}),
-        ("T25", [Heir(relation="PGF", relation_type="grandfather_paternal", lineage="paternal", gender="M", count=1, generation_level=2), Heir(relation="PGM", relation_type="grandmother_paternal", lineage="paternal", gender="F", count=1, generation_level=2)], {"PGF":"2/3","PGM":"1/3"})
+        ("T21", [Heir(relation="Full Bro", relation_type="Brother", lineage="paternal", gender="M", count=1, generation_level=1), Heir(relation="Mat Bro", relation_type="Brother_Maternal", lineage="maternal", gender="M", count=1, generation_level=1)], {"Full Bro":"2/3","Mat Bro":"1/3"}),
+        ("T22", [Heir(relation="Full Bro", relation_type="Brother", lineage="paternal", gender="M", count=1, generation_level=1), Heir(relation="Mat Sis", relation_type="Sister_Maternal", lineage="maternal", gender="F", count=1, generation_level=1)], {"Full Bro":"2/3","Mat Sis":"1/3"}),
+        ("T23", [Heir(relation="PGF", relation_type="grandfather_paternal", lineage="paternal", gender="M", count=1, generation_level=2), Heir(relation="Full Bro", relation_type="Brother", lineage="paternal", gender="M", count=1, generation_level=1)], {"grandfather_paternal":"1/2","Full Bro":"1/2"}),
+        ("T24", [Heir(relation="PGF", relation_type="grandfather_paternal", lineage="paternal", gender="M", count=1, generation_level=2), Heir(relation="Nephew", relation_type="Son_of_Brother", lineage="paternal", gender="M", count=1, generation_level=2)], {"grandfather_paternal":"1/2","Nephew":"1/2"}),
+        ("T25", [Heir(relation="PGF", relation_type="grandfather_paternal", lineage="paternal", gender="M", count=1, generation_level=2), Heir(relation="PGM", relation_type="grandmother_paternal", lineage="paternal", gender="F", count=1, generation_level=2)], {"grandfather_paternal":"2/3","grandmother_paternal":"1/3"}),
+        ("T26", [Heir(relation="PGF", relation_type="grandfather_paternal", lineage="paternal", gender="M", count=1, generation_level=2), Heir(relation="PGM", relation_type="grandmother_paternal", lineage="paternal", gender="F", count=1, generation_level=2), Heir(relation="MGF", relation_type="grandfather_maternal", lineage="maternal", gender="M", count=1, generation_level=2), Heir(relation="MGM", relation_type="grandmother_maternal", lineage="maternal", gender="F", count=1, generation_level=2)], {"grandfather_paternal":"4/9", "grandmother_paternal":"2/9", "grandfather_maternal":"1/6", "grandmother_maternal":"1/6"}),
+        ("T27", [Heir(relation="Grandmother", relation_type="grandmother_paternal", lineage="paternal", gender="F", count=1, generation_level=2)], {"Grandmother":"1"})
     ]
 
     total_passed = 0

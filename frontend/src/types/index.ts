@@ -4,6 +4,7 @@ export interface HeirInput {
     lineage: string;
     gender: string;
     count: number;
+    generation_level: number;
     is_killer?: boolean;
     is_different_religion?: boolean;
     is_illegitimate?: boolean;

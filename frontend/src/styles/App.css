@@ -677,3 +677,4 @@ button, .btn-primary, .btn-outline, .btn-icon {
     grid-template-columns: 1fr;
   }
 }
+`n/* Tabs - Minimal Horizontal Flex */`n.tabs-container {`n    display: flex;`n    flex-direction: row;`n    flex-wrap: wrap;`n    gap: 0.5rem;`n    margin-bottom: 1.5rem;`n    border-bottom: 1px solid var(--gold);`n    padding-bottom: 0.5rem;`n}`n.tab-btn {`n    padding: 0.5rem 1rem;`n    border: 1px solid transparent;`n    background: none;`n    color: var(--text-muted);`n    font-family: var(--font-serif);`n    cursor: pointer;`n    transition: background 0.2s;`n    border-radius: 0.25rem 0.25rem 0 0;`n}`n.tab-btn.active {`n    color: var(--primary);`n    border: 1px solid var(--gold);`n    border-bottom: 2px solid var(--bg);`n    background: white;`n    margin-bottom: -0.6rem;`n    font-weight: 600;`n}

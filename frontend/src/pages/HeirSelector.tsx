@@ -30,10 +30,10 @@ const AVAILABLE_RELATIONS: RelationInfo[] = [
     { relation: 'Daughter', relation_type: 'Daughter', lineage: 'direct', gender: 'F', max: 20, category: 'Children', generation_level: 1 },
 
     // --- GRANDPARENTS (New Module) ---
-    { relation: 'Paternal Grandfather (Jad)', relation_type: 'grandfather_paternal', lineage: 'paternal', gender: 'M', max: 1, category: 'Grandparents', generation_level: 2 },
-    { relation: 'Paternal Grandmother (Jaddah)', relation_type: 'grandmother_paternal', lineage: 'paternal', gender: 'F', max: 3, category: 'Grandparents', generation_level: 2 },
-    { relation: 'Maternal Grandfather (Jad)', relation_type: 'grandfather_maternal', lineage: 'maternal', gender: 'M', max: 1, category: 'Grandparents', generation_level: 2 },
-    { relation: 'Maternal Grandmother (Jaddah)', relation_type: 'grandmother_maternal', lineage: 'maternal', gender: 'F', max: 3, category: 'Grandparents', generation_level: 2 },
+    { relation: 'PGF (Jad) [Father Side]', relation_type: 'grandfather_paternal', lineage: 'paternal', gender: 'M', max: 1, category: 'Grandparents', generation_level: 2 },
+    { relation: 'PGM (Jaddah) [Father Side]', relation_type: 'grandmother_paternal', lineage: 'paternal', gender: 'F', max: 3, category: 'Grandparents', generation_level: 2 },
+    { relation: 'MGF (Jad) [Mother Side]', relation_type: 'grandfather_maternal', lineage: 'maternal', gender: 'M', max: 1, category: 'Grandparents', generation_level: 2 },
+    { relation: 'MGM (Jaddah) [Mother Side]', relation_type: 'grandmother_maternal', lineage: 'maternal', gender: 'F', max: 3, category: 'Grandparents', generation_level: 2 },
 
     // --- DESCENDANTS (Substitution) ---
     { relation: 'Son of Son', relation_type: 'Son_of_Son', lineage: 'paternal_descendant', gender: 'M', max: 20, category: 'Grandchildren', generation_level: 2 },
@@ -72,6 +72,8 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
         return cats;
     }, [filteredRelations]);
 
+    const [activeTab, setActiveTab] = useState<string>(categories[0] || '');
+
     const handleAdd = (item: RelationInfo) => {
         const existingIndex = selectedHeirs.findIndex(h => h.relation_type === item.relation_type && h.generation_level === item.generation_level);
         if (existingIndex !== -1) {
@@ -90,15 +92,15 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
         }
     };
 
-    const handleRemove = (relType: string) => {
-        const existingIndex = selectedHeirs.findIndex(h => h.relation_type === relType);
+    const handleRemove = (relType: string, genLevel: number) => {
+        const existingIndex = selectedHeirs.findIndex(h => h.relation_type === relType && h.generation_level === genLevel);
         if (existingIndex !== -1) {
             const newHeirs = [...selectedHeirs];
             if (newHeirs[existingIndex].count > 1) {
                 newHeirs[existingIndex].count -= 1;
                 setSelectedHeirs(newHeirs);
             } else {
-                setSelectedHeirs(newHeirs.filter(h => h.relation_type !== relType));
+                setSelectedHeirs(newHeirs.filter((_, idx) => idx !== existingIndex));
             }
         }
     };
@@ -130,28 +132,35 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
                 <button className="text-link" style={{ fontSize: '0.85rem', color: 'var(--secondary)' }} onClick={() => {setDeceasedGender(null); setSelectedHeirs([]);}}>Change deceased gender</button>
             </div>
 
+            <div className="tabs-container">
+                {categories.map(cat => (
+                    <button 
+                        key={cat} 
+                        className={`tab-btn ${activeTab === cat ? 'active' : ''}`}
+                        onClick={() => setActiveTab(cat)}
+                    >
+                        {cat}
+                    </button>
+                ))}
+            </div>
+
             <div className="heir-selection-grid">
                 <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '1rem' }}>
-                    {categories.map(cat => (
-                        <div key={cat} className="mb-4">
-                            <h3 className="section-title serif" style={{ fontSize: '1.1rem', color: 'var(--secondary)' }}>{cat}</h3>
-                            <div className="heir-list">
-                                {filteredRelations.filter(r => r.category === cat).map(item => {
-                                    const selected = selectedHeirs.find(h => h.relation_type === item.relation_type);
-                                    return (
-                                        <RelationCard 
-                                            key={item.relation_type}
-                                            relation={item.relation}
-                                            count={selected ? selected.count : 0}
-                                            max={item.max}
-                                            onAdd={() => handleAdd(item)}
-                                            onRemove={() => handleRemove(item.relation_type)}
-                                        />
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    ))}
+                    <div className="heir-list">
+                        {filteredRelations.filter(r => r.category === activeTab).map(item => {
+                            const selected = selectedHeirs.find(h => h.relation_type === item.relation_type && h.generation_level === item.generation_level);
+                            return (
+                                <RelationCard 
+                                    key={`${item.relation_type}_${item.generation_level}`}
+                                    relation={item.relation}
+                                    count={selected ? selected.count : 0}
+                                    max={item.max}
+                                    onAdd={() => handleAdd(item)}
+                                    onRemove={() => handleRemove(item.relation_type, item.generation_level)}
+                                />
+                            );
+                        })}
+                    </div>
                 </div>
 
                 <SelectionAudit heirs={selectedHeirs} />

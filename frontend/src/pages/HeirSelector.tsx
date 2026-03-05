@@ -12,6 +12,7 @@ interface Props {
 
 interface RelationInfo {
     relation: string;
+    arabic?: string;
     relation_type: string;
     lineage: string;
     gender: string;
@@ -22,42 +23,42 @@ interface RelationInfo {
 
 const AVAILABLE_RELATIONS: RelationInfo[] = [
     // --- DIRECT ---
-    { relation: 'Father', relation_type: 'Father', lineage: 'direct', gender: 'M', max: 1, category: 'Parents', generation_level: 1 },
-    { relation: 'Mother', relation_type: 'Mother', lineage: 'direct', gender: 'F', max: 1, category: 'Parents', generation_level: 1 },
-    { relation: 'Husband', relation_type: 'Husband', lineage: 'direct', gender: 'M', max: 1, category: 'Spouse', generation_level: 1 },
-    { relation: 'Wife', relation_type: 'Wife', lineage: 'direct', gender: 'F', max: 4, category: 'Spouse', generation_level: 1 },
-    { relation: 'Son', relation_type: 'Son', lineage: 'direct', gender: 'M', max: 20, category: 'Children', generation_level: 1 },
-    { relation: 'Daughter', relation_type: 'Daughter', lineage: 'direct', gender: 'F', max: 20, category: 'Children', generation_level: 1 },
+    { relation: 'Father', arabic: 'الاب', relation_type: 'Father', lineage: 'direct', gender: 'M', max: 1, category: 'Parents', generation_level: 1 },
+    { relation: 'Mother', arabic: 'الام', relation_type: 'Mother', lineage: 'direct', gender: 'F', max: 1, category: 'Parents', generation_level: 1 },
+    { relation: 'Husband', arabic: 'الزوج', relation_type: 'Husband', lineage: 'direct', gender: 'M', max: 1, category: 'Spouse', generation_level: 1 },
+    { relation: 'Wife', arabic: 'الزوجة', relation_type: 'Wife', lineage: 'direct', gender: 'F', max: 4, category: 'Spouse', generation_level: 1 },
+    { relation: 'Son', arabic: 'الابن', relation_type: 'Son', lineage: 'direct', gender: 'M', max: 20, category: 'Children', generation_level: 1 },
+    { relation: 'Daughter', arabic: 'البنت', relation_type: 'Daughter', lineage: 'direct', gender: 'F', max: 20, category: 'Children', generation_level: 1 },
 
     // --- GRANDPARENTS ---
-    { relation: 'PGF (Jad) [Father Side]', relation_type: 'grandfather_paternal', lineage: 'paternal', gender: 'M', max: 1, category: 'Grandparents', generation_level: 2 },
-    { relation: 'PGM (Jaddah) [Father Side]', relation_type: 'grandmother_paternal', lineage: 'paternal', gender: 'F', max: 3, category: 'Grandparents', generation_level: 2 },
-    { relation: 'MGF (Jad) [Mother Side]', relation_type: 'grandfather_maternal', lineage: 'maternal', gender: 'M', max: 1, category: 'Grandparents', generation_level: 2 },
-    { relation: 'MGM (Jaddah) [Mother Side]', relation_type: 'grandmother_maternal', lineage: 'maternal', gender: 'F', max: 3, category: 'Grandparents', generation_level: 2 },
+    { relation: 'PGF (Jad) [Father Side]', arabic: 'الجد للأب', relation_type: 'grandfather_paternal', lineage: 'paternal', gender: 'M', max: 1, category: 'Grandparents', generation_level: 2 },
+    { relation: 'PGM (Jaddah) [Father Side]', arabic: 'الجدة للأب', relation_type: 'grandmother_paternal', lineage: 'paternal', gender: 'F', max: 3, category: 'Grandparents', generation_level: 2 },
+    { relation: 'MGF (Jad) [Mother Side]', arabic: 'الجد للأم', relation_type: 'grandfather_maternal', lineage: 'maternal', gender: 'M', max: 1, category: 'Grandparents', generation_level: 2 },
+    { relation: 'MGM (Jaddah) [Mother Side]', arabic: 'الجدة للأم', relation_type: 'grandmother_maternal', lineage: 'maternal', gender: 'F', max: 3, category: 'Grandparents', generation_level: 2 },
 
     // --- DESCENDANTS ---
-    { relation: 'Son of Son', relation_type: 'Son_of_Son', lineage: 'paternal_descendant', gender: 'M', max: 20, category: 'Grandchildren', generation_level: 2 },
-    { relation: 'Daughter of Son', relation_type: 'Daughter_of_Son', lineage: 'paternal_descendant', gender: 'F', max: 20, category: 'Grandchildren', generation_level: 2 },
-    { relation: 'Son of Daughter', relation_type: 'Son_of_Daughter', lineage: 'maternal_descendant', gender: 'M', max: 20, category: 'Grandchildren', generation_level: 2 },
-    { relation: 'Daughter of Daughter', relation_type: 'Daughter_of_Daughter', lineage: 'maternal_descendant', gender: 'F', max: 20, category: 'Grandchildren', generation_level: 2 },
+    { relation: 'Son of Son', arabic: 'ابن الابن', relation_type: 'Son_of_Son', lineage: 'paternal_descendant', gender: 'M', max: 20, category: 'Grandchildren', generation_level: 2 },
+    { relation: 'Daughter of Son', arabic: 'بنت الابن', relation_type: 'Daughter_of_Son', lineage: 'paternal_descendant', gender: 'F', max: 20, category: 'Grandchildren', generation_level: 2 },
+    { relation: 'Son of Daughter', arabic: 'ابن البنت', relation_type: 'Son_of_Daughter', lineage: 'maternal_descendant', gender: 'M', max: 20, category: 'Grandchildren', generation_level: 2 },
+    { relation: 'Daughter of Daughter', arabic: 'بنت البنت', relation_type: 'Daughter_of_Daughter', lineage: 'maternal_descendant', gender: 'F', max: 20, category: 'Grandchildren', generation_level: 2 },
 
     // --- SIBLINGS (PATERNAL/FULL) ---
-    { relation: 'Brother', relation_type: 'Brother', lineage: 'paternal', gender: 'M', max: 20, category: 'Siblings', generation_level: 1 },
-    { relation: 'Sister', relation_type: 'Sister', lineage: 'paternal', gender: 'F', max: 20, category: 'Siblings', generation_level: 1 },
+    { relation: 'Brother', arabic: 'الأخ', relation_type: 'Brother', lineage: 'paternal', gender: 'M', max: 20, category: 'Siblings', generation_level: 1 },
+    { relation: 'Sister', arabic: 'الأخت', relation_type: 'Sister', lineage: 'paternal', gender: 'F', max: 20, category: 'Siblings', generation_level: 1 },
     
     // --- SIBLINGS (MATERNAL) ---
-    { relation: 'Maternal Brother', relation_type: 'Brother_Maternal', lineage: 'maternal', gender: 'M', max: 20, category: 'Maternal Sibs', generation_level: 1 },
-    { relation: 'Maternal Sister', relation_type: 'Sister_Maternal', lineage: 'maternal', gender: 'F', max: 20, category: 'Maternal Sibs', generation_level: 1 },
+    { relation: 'Maternal Brother', arabic: 'الأخ للأم', relation_type: 'Brother_Maternal', lineage: 'maternal', gender: 'M', max: 20, category: 'Maternal Sibs', generation_level: 1 },
+    { relation: 'Maternal Sister', arabic: 'الأخت للأم', relation_type: 'Sister_Maternal', lineage: 'maternal', gender: 'F', max: 20, category: 'Maternal Sibs', generation_level: 1 },
 
     // --- NEPHEWS ---
-    { relation: 'Son of Brother', relation_type: 'Son_of_Brother', lineage: 'paternal', gender: 'M', max: 20, category: 'Nephews', generation_level: 2 },
-    { relation: 'Son of Sister', relation_type: 'Son_of_Sister', lineage: 'maternal', gender: 'M', max: 20, category: 'Nephews', generation_level: 2 },
+    { relation: 'Son of Brother', arabic: 'ابن الأخ', relation_type: 'Son_of_Brother', lineage: 'paternal', gender: 'M', max: 20, category: 'Nephews', generation_level: 2 },
+    { relation: 'Son of Sister', arabic: 'ابن الأخت', relation_type: 'Son_of_Sister', lineage: 'maternal', gender: 'M', max: 20, category: 'Nephews', generation_level: 2 },
 
     // --- EXTENDED ---
-    { relation: 'Paternal Uncle', relation_type: 'Paternal_Uncle', lineage: 'paternal', gender: 'M', max: 20, category: 'Uncles/Aunts', generation_level: 2 },
-    { relation: 'Paternal Aunt', relation_type: 'Paternal_Aunt', lineage: 'paternal', gender: 'F', max: 20, category: 'Uncles/Aunts', generation_level: 2 },
-    { relation: 'Maternal Uncle', relation_type: 'Maternal_Uncle', lineage: 'maternal', gender: 'M', max: 20, category: 'Uncles/Aunts', generation_level: 2 },
-    { relation: 'Maternal Aunt', relation_type: 'Maternal_Aunt', lineage: 'maternal', gender: 'F', max: 20, category: 'Uncles/Aunts', generation_level: 2 }
+    { relation: 'Paternal Uncle', arabic: 'العم', relation_type: 'Paternal_Uncle', lineage: 'paternal', gender: 'M', max: 20, category: 'Uncles/Aunts', generation_level: 2 },
+    { relation: 'Paternal Aunt', arabic: 'العمة', relation_type: 'Paternal_Aunt', lineage: 'paternal', gender: 'F', max: 20, category: 'Uncles/Aunts', generation_level: 2 },
+    { relation: 'Maternal Uncle', arabic: 'الخال', relation_type: 'Maternal_Uncle', lineage: 'maternal', gender: 'M', max: 20, category: 'Uncles/Aunts', generation_level: 2 },
+    { relation: 'Maternal Aunt', arabic: 'الخالة', relation_type: 'Maternal_Aunt', lineage: 'maternal', gender: 'F', max: 20, category: 'Uncles/Aunts', generation_level: 2 }
 ];
 
 const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) => {
@@ -84,8 +85,10 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
         const existingIndex = selectedHeirs.findIndex(h => h.relation_type === item.relation_type && h.generation_level === item.generation_level);
         if (existingIndex !== -1) {
             const newHeirs = [...selectedHeirs];
-            newHeirs[existingIndex].count += 1;
-            setSelectedHeirs(newHeirs);
+            if (newHeirs[existingIndex].count < item.max) {
+                newHeirs[existingIndex].count += 1;
+                setSelectedHeirs(newHeirs);
+            }
         } else {
             setSelectedHeirs([...selectedHeirs, { 
                 relation: item.relation, 
@@ -110,6 +113,16 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
             }
         }
     };
+
+    const handleClear = (relType: string, genLevel: number) => {
+        setSelectedHeirs(prev => prev.filter(h => !(h.relation_type === relType && h.generation_level === genLevel)));
+    };
+
+    const handleAuditAdd = (relType: string, genLevel: number) => {
+        const relInfo = AVAILABLE_RELATIONS.find(r => r.relation_type === relType && r.generation_level === genLevel);
+        if (relInfo) handleAdd(relInfo);
+    };
+
 
     if (!deceasedGender) {
         return (
@@ -159,6 +172,7 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
                                 <RelationCard 
                                     key={`${item.relation_type}_${item.generation_level}`}
                                     relation={item.relation}
+                                    arabic={item.arabic}
                                     count={selected ? selected.count : 0}
                                     max={item.max}
                                     onAdd={() => handleAdd(item)}
@@ -169,7 +183,12 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
                     </div>
                 </div>
 
-                <SelectionAudit heirs={selectedHeirs} />
+                <SelectionAudit 
+                    heirs={selectedHeirs} 
+                    onAdd={handleAuditAdd}
+                    onRemove={handleRemove}
+                    onClear={handleClear}
+                />
             </div>
 
             <div className="action-area">

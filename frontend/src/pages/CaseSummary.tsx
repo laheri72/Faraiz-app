@@ -16,12 +16,47 @@ interface Props {
 const CaseSummary: React.FC<Props> = ({ caseState, onBack, onCalculate }) => {
     const { estate, heirs } = caseState;
     const netEstate = estate.value - estate.debts - estate.wasiyyah;
+    
+    // Percentages for visual bar
+    const debtPct = (estate.debts / estate.value) * 100;
+    const wasiyyahPct = (estate.wasiyyah / estate.value) * 100;
+    const netPct = 100 - debtPct - wasiyyahPct;
 
     return (
         <div className="animate-fade">
             <div className="page-statement">
                 <h2 className="serif">Step 3: Case Summary</h2>
                 <p>Please verify the case details below before initiating the formal jurisprudence calculation.</p>
+            </div>
+
+            {/* Visual Distributable Bar */}
+            <div style={{ marginBottom: '2.5rem' }}>
+                <div className="flex justify-between items-center mb-2" style={{ fontSize: '0.85rem', fontWeight: '600' }}>
+                    <span className="serif">Estate Allocation Overview</span>
+                    <span className="text-muted">Net: {Math.round(netPct)}%</span>
+                </div>
+                <div style={{ 
+                    width: '100%', 
+                    height: '24px', 
+                    display: 'flex', 
+                    borderRadius: '12px', 
+                    overflow: 'hidden', 
+                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)',
+                    background: '#e5e7eb'
+                }}>
+                    {estate.debts > 0 && (
+                        <div style={{ width: `${debtPct}%`, background: 'var(--error)', transition: 'width 0.5s ease' }} title="Debts" />
+                    )}
+                    {estate.wasiyyah > 0 && (
+                        <div style={{ width: `${wasiyyahPct}%`, background: 'var(--accent)', transition: 'width 0.5s ease' }} title="Wasiyyah" />
+                    )}
+                    <div style={{ width: `${netPct}%`, background: 'var(--primary)', transition: 'width 0.5s ease' }} title="Net Distributable" />
+                </div>
+                <div className="flex gap-4 mt-2 justify-center" style={{ fontSize: '0.75rem' }}>
+                    <div className="flex items-center gap-1"><div style={{ width: '10px', height: '10px', background: 'var(--primary)', borderRadius: '2px' }} /> Net Distributable</div>
+                    {estate.wasiyyah > 0 && <div className="flex items-center gap-1"><div style={{ width: '10px', height: '10px', background: 'var(--accent)', borderRadius: '2px' }} /> Wasiyyah</div>}
+                    {estate.debts > 0 && <div className="flex items-center gap-1"><div style={{ width: '10px', height: '10px', background: 'var(--error)', borderRadius: '2px' }} /> Debts</div>}
+                </div>
             </div>
 
             <div className="grid-2">

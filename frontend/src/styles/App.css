@@ -731,6 +731,7 @@ button,
     grid-template-columns: 1fr;
   }
 }
+
 /* Responsive Utils */
 @media (max-width: 640px) {
   .hidden-mobile {
@@ -747,13 +748,15 @@ button,
   .no-print {
     display: none !important;
   }
+
   .print-only {
     display: block !important;
   }
+
   body {
     background: white;
   }
-...
+
   .container {
     box-shadow: none;
     border: none;
@@ -762,9 +765,11 @@ button,
     width: 100%;
     max-width: 100%;
   }
+
   .app-container {
     padding: 0;
   }
+
   .jurisprudence-header {
     border-bottom: 1px solid #eee;
   }
@@ -773,7 +778,7 @@ button,
 .history-card:hover {
   transform: translateY(-2px);
   border-color: var(--gold) !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   background: #fffcf5 !important;
 }
 

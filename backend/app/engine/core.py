@@ -49,8 +49,8 @@ KNOWLEDGE_BASE: List[Rule] = [
     Rule(
         rule_id="M2-MOTHER-BLOCK-SIBLINGS", priority=101, category="blocking",
         conditions={"all": [RuleCondition(fact="exists", relation="Mother", operator="==", value=True), RuleCondition(fact="has_descendants", operator="==", value=False)]},
-        actions=[RuleAction(type="blocking", target="Brother"), RuleAction(type="blocking", target="Sister"), RuleAction(type="blocking", target="Brother_Maternal"), RuleAction(type="blocking", target="Sister_Maternal"), RuleAction(type="blocking", target="Son_of_Brother")],
-        arabic_text="الأم تحجب الإخوة", meaning="Mother blocks siblings only"
+        actions=[RuleAction(type="blocking", target="Brother_Maternal"), RuleAction(type="blocking", target="Sister_Maternal")],
+        arabic_text="الأم تحجب الإخوة لأم", meaning="Mother blocks maternal siblings"
     ),
     Rule(
         rule_id="GM-BLOCK-BOTH-PARENTS", priority=102, category="blocking",
@@ -135,11 +135,12 @@ KNOWLEDGE_BASE: List[Rule] = [
         conditions={
             "all": [
                 RuleCondition(fact="exists", relation="Mother", operator="==", value=True),
+                RuleCondition(fact="exists", relation="Father", operator="==", value=True),
                 RuleCondition(fact="total_brothers_raw", operator=">=", value=2)
             ]
         },
         actions=[RuleAction(type="assign_fraction", target="Mother", value="1/6", radd_eligible=False)],
-        arabic_text="فإن كان له إخوة فلأمه السدس", meaning="Mother reduced to 1/6 by 2+ brothers"
+        arabic_text="فإن كان له إخوة فلأمه السدس", meaning="Mother reduced to 1/6 by 2+ siblings (Full/Paternal) with Father"
     ),
     Rule(
         rule_id="L2-MOTHER-CHILD", priority=401, category="allocation", slot="mother_fixed",
@@ -164,12 +165,6 @@ KNOWLEDGE_BASE: List[Rule] = [
         conditions={"all": [RuleCondition(fact="exists", relation="Father", operator="==", value=True), RuleCondition(fact="has_descendants", operator="==", value=False)]},
         actions=[RuleAction(type="assign_remainder", target="Father")],
         arabic_text="والأب أقرب فيأخذ ما بقي", meaning="Father takes remainder"
-    ),
-    Rule(
-        rule_id="GP-PATERNAL-GF-WITH-MOTHER", priority=412, category="allocation", slot="father_fixed",
-        conditions={"all": [RuleCondition(fact="exists", relation="Mother", operator="==", value=True), RuleCondition(fact="exists", relation="Father", operator="==", value=False), RuleCondition(fact="exists", relation="grandfather_paternal", operator="==", value=True), RuleCondition(fact="has_descendants", operator="==", value=False)]},
-        actions=[RuleAction(type="assign_remainder", target="grandfather_paternal")],
-        arabic_text="الجد مع الأم", meaning="Paternal Grandfather takes remainder with Mother"
     ),
 
     # --- ALLOCATION: CHILDREN & SUBSTITUTES (500-599) ---
@@ -247,7 +242,7 @@ KNOWLEDGE_BASE: List[Rule] = [
         conditions={
             "all": [
                 RuleCondition(fact="has_descendants", operator="==", value=False),
-                RuleCondition(fact="exists_class", target_class="parents", operator="==", value=False),
+                RuleCondition(fact="exists", relation="Father", operator="==", value=False),
                 RuleCondition(fact="exists_class", target_class="siblings_paternal", operator="==", value=True)
             ]
         },
@@ -322,7 +317,8 @@ class InferenceEngine:
         if fact == "has_debts": return self.state.debts > 0
         if fact == "has_wasiyyah": return self.state.wasiyyah > 0
         if fact == "active_mode": return self.state.active_mode
-        if fact == "total_brothers_raw": return get_count_raw("Brother")
+        if fact == "total_brothers_raw":
+            return get_count_raw("Brother") + get_count_raw("Sister")
         if fact == "total_maternal_siblings":
             return get_count("Brother_Maternal") + get_count("Sister_Maternal")
         if fact == "has_descendants":

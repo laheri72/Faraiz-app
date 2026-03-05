@@ -26,9 +26,13 @@ const EstateForm: React.FC<Props> = ({ initialData, onNext }) => {
     const [currency, setCurrency] = useState<string>('₹');
 
     const estateNum = parseFloat(value) || 0;
-    const wasiyyahNum = parseFloat(wasiyyah) || 0;
-    const maxWasiyyah = estateNum / 3;
-    const isWasiyyahOverLimit = wasiyyahNum > maxWasiyyah;
+    const debtNum = parseFloat(debts || '0') || 0;
+    const wasiyyahNum = parseFloat(wasiyyah || '0') || 0;
+    
+    const isDebtOverLimit = debtNum > estateNum;
+    const netForWasiyyah = Math.max(0, estateNum - debtNum);
+    const maxWasiyyah = netForWasiyyah / 3;
+    const isWasiyyahOverLimit = wasiyyahNum > maxWasiyyah + 0.01; // Small buffer for floats
 
     return (
         <div className="animate-fade">
@@ -78,7 +82,13 @@ const EstateForm: React.FC<Props> = ({ initialData, onNext }) => {
                         placeholder="Enter debts (e.g., 10000)" 
                         value={debts}
                         onChange={(e) => setDebts(e.target.value)}
+                        style={{ borderColor: isDebtOverLimit ? 'var(--error)' : 'var(--border)' }}
                     />
+                    {isDebtOverLimit && (
+                        <p style={{ color: 'var(--error)', fontSize: '0.8rem', marginTop: '0.4rem', fontWeight: '600' }}>
+                            ⚠ Debts cannot exceed the total estate value. This engine only processes solvent estates.
+                        </p>
+                    )}
                     <AmountPreview value={debts} currency={currency} />
                 </div>
 
@@ -93,9 +103,9 @@ const EstateForm: React.FC<Props> = ({ initialData, onNext }) => {
                         onChange={(e) => setWasiyyah(e.target.value)}
                         style={{ borderColor: isWasiyyahOverLimit ? 'var(--error)' : 'var(--border)' }}
                     />
-                    {isWasiyyahOverLimit && (
+                    {isWasiyyahOverLimit && !isDebtOverLimit && (
                         <p style={{ color: 'var(--error)', fontSize: '0.8rem', marginTop: '0.4rem', fontWeight: '600' }}>
-                            ⚠ Wasiyyah is capped at 1/3 ({currency} {formatCurrencyIndian(Math.floor(maxWasiyyah))}). The engine will auto-adjust this.
+                            ⚠ Wasiyyah cannot exceed 1/3 of (Estate - Debts). Limit: {currency} {formatCurrencyIndian(Math.floor(maxWasiyyah))}.
                         </p>
                     )}
                     <AmountPreview value={wasiyyah} currency={currency} />
@@ -106,7 +116,7 @@ const EstateForm: React.FC<Props> = ({ initialData, onNext }) => {
                 <div />
                 <button 
                     className="btn-primary" 
-                    disabled={!value || parseFloat(value) <= 0}
+                    disabled={!value || parseFloat(value) <= 0 || isWasiyyahOverLimit || isDebtOverLimit}
                     onClick={() => onNext(parseFloat(value), parseFloat(debts || '0'), parseFloat(wasiyyah || '0'))}
                 >
                     Next: Define Heirs

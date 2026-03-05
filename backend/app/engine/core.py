@@ -138,7 +138,7 @@ KNOWLEDGE_BASE: List[Rule] = [
     Rule(
         rule_id="L2-MOTHER-CHILD", priority=401, category="allocation", slot="mother_fixed",
         conditions={"all": [RuleCondition(fact="exists", relation="Mother", operator="==", value=True), RuleCondition(fact="has_descendants", operator="==", value=True)]},
-        actions=[RuleAction(type="assign_fraction", target="Mother", value="1/6", radd_eligible=False)],
+        actions=[RuleAction(type="assign_fraction", target="Mother", value="1/6", radd_eligible=True)],
         arabic_text="فلللأم السدس مع الولد", meaning="Mother 1/6 fixed with children"
     ),
     Rule(
@@ -150,7 +150,7 @@ KNOWLEDGE_BASE: List[Rule] = [
     Rule(
         rule_id="L2-FATHER-CHILD", priority=410, category="allocation", slot="father_fixed",
         conditions={"all": [RuleCondition(fact="exists", relation="Father", operator="==", value=True), RuleCondition(fact="has_descendants", operator="==", value=True)]},
-        actions=[RuleAction(type="assign_fraction", target="Father", value="1/6", radd_eligible=False)],
+        actions=[RuleAction(type="assign_fraction", target="Father", value="1/6", radd_eligible=True)],
         arabic_text="للأب السدس مع الولد", meaning="Father 1/6 fixed with children"
     ),
     Rule(
@@ -175,7 +175,7 @@ KNOWLEDGE_BASE: List[Rule] = [
     ),
     Rule(
         rule_id="F1-DESCENDANT-REMAINDER", priority=510, category="allocation", slot="descendant_fixed",
-        conditions={"all": [RuleCondition(fact="has_descendants", operator="==", value=True)]},
+        conditions={"all": [RuleCondition(fact="has_male_descendants", operator="==", value=True)]},
         actions=[RuleAction(type="assign_remainder", target="Descendants_Pool")],
         arabic_text="بدئ بفريضته ثم الباقي للولد", meaning="Remainder to direct descendants or substitutes"
     ),
@@ -315,6 +315,8 @@ class InferenceEngine:
             return get_count("Brother_Maternal") + get_count("Sister_Maternal")
         if fact == "has_descendants":
             return any(get_count(r) > 0 for r in ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"])
+        if fact == "has_male_descendants":
+            return any(get_count(r) > 0 for r in ["Son", "Son_of_Son", "Son_of_Son_of_Son"])
         if fact == "exists_class":
             if condition.target_class == "parents": return any(get_count(r) > 0 for r in ["Father", "Mother"])
             if condition.target_class == "siblings": return any(get_count(r) > 0 for r in ["Brother", "Sister", "Brother_Maternal", "Sister_Maternal", "Son_of_Brother", "grandfather_paternal"])

@@ -731,34 +731,46 @@ button,
     grid-template-columns: 1fr;
   }
 }
+/* Print & Export Styles */
+.print-only {
+  display: none;
+}
 
-/* Tabs - Minimal Horizontal Flex */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  body {
+    background: white;
+  }
+...
+  .container {
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  .app-container {
+    padding: 0;
+  }
+  .jurisprudence-header {
+    border-bottom: 1px solid #eee;
+  }
+}
+
+.history-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  background: #fffcf5 !important;
+}
+
+/* Tabs - DEPRECATED */
 .tabs-container {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--gold);
-  padding-bottom: 0.5rem;
-}
-
-.tab-btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid transparent;
-  background: none;
-  color: var(--text-muted);
-  font-family: var(--font-serif);
-  cursor: pointer;
-  transition: background 0.2s;
-  border-radius: 0.25rem 0.25rem 0 0;
-}
-
-.tab-btn.active {
-  color: var(--primary);
-  border: 1px solid var(--gold);
-  border-bottom: 2px solid var(--bg);
-  background: white;
-  margin-bottom: -0.6rem;
-  font-weight: 600;
+  display: none;
 }

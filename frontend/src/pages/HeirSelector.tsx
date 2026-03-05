@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { HeirInput } from '../types';
 import { User } from 'lucide-react';
 import RelationCard from '../components/RelationCard';
@@ -65,6 +65,13 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
     const [deceasedGender, setDeceasedGender] = useState<'M' | 'F' | null>(currentHeirs.length > 0 ? (currentHeirs.some(h => h.relation_type === 'Husband') ? 'F' : 'M') : null);
     const [selectedHeirs, setSelectedHeirs] = useState<HeirInput[]>(currentHeirs);
 
+    useEffect(() => {
+        const topElement = document.getElementById('heir-selector-top');
+        if (topElement) {
+            topElement.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [deceasedGender]);
+
     const filteredRelations = useMemo(() => {
         if (!deceasedGender) return [];
         return AVAILABLE_RELATIONS.filter(item => {
@@ -79,9 +86,14 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
         return cats;
     }, [filteredRelations]);
 
-    const [activeTab, setActiveTab] = useState<string>(categories[0] || '');
+    const triggerHaptic = () => {
+        if (window.navigator.vibrate) {
+            window.navigator.vibrate(10);
+        }
+    };
 
     const handleAdd = (item: RelationInfo) => {
+        triggerHaptic();
         const existingIndex = selectedHeirs.findIndex(h => h.relation_type === item.relation_type && h.generation_level === item.generation_level);
         if (existingIndex !== -1) {
             const newHeirs = [...selectedHeirs];
@@ -102,6 +114,7 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
     };
 
     const handleRemove = (relType: string, genLevel: number) => {
+        triggerHaptic();
         const existingIndex = selectedHeirs.findIndex(h => h.relation_type === relType && h.generation_level === genLevel);
         if (existingIndex !== -1) {
             const newHeirs = [...selectedHeirs];
@@ -115,7 +128,16 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
     };
 
     const handleClear = (relType: string, genLevel: number) => {
+        triggerHaptic();
         setSelectedHeirs(prev => prev.filter(h => !(h.relation_type === relType && h.generation_level === genLevel)));
+    };
+
+    const handleNext = () => {
+        if (selectedHeirs.length === 0) {
+            const confirmNone = window.confirm("Caution: You haven't added any heirs. This will send all money to 'Bayt al-Maal'. Are you sure you want to proceed?");
+            if (!confirmNone) return;
+        }
+        onHeirChange(selectedHeirs);
     };
 
     const handleAuditAdd = (relType: string, genLevel: number) => {
@@ -145,55 +167,52 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
 
     return (
         <div className="animate-fade">
-            <div className="page-statement">
+            <div className="page-statement" id="heir-selector-top">
                 <h2 className="serif">Step 2: Heir Selection</h2>
                 <p>Define the surviving family members of the deceased <strong>({deceasedGender === 'M' ? 'Marhum' : 'Marhuma'})</strong>.</p>
                 <button className="text-link" style={{ fontSize: '0.85rem', color: 'var(--secondary)' }} onClick={() => {setDeceasedGender(null); setSelectedHeirs([]);}}>Change deceased gender</button>
             </div>
 
-            <div className="tabs-container">
-                {categories.map(cat => (
-                    <button 
-                        key={cat} 
-                        className={`tab-btn ${activeTab === cat ? 'active' : ''}`}
-                        onClick={() => setActiveTab(cat)}
-                    >
-                        {cat}
-                    </button>
-                ))}
-            </div>
-
             <div className="heir-selection-grid">
-                <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '1rem' }}>
-                    <div className="heir-list">
-                        {filteredRelations.filter(r => r.category === activeTab).map(item => {
-                            const selected = selectedHeirs.find(h => h.relation_type === item.relation_type && h.generation_level === item.generation_level);
-                            return (
-                                <RelationCard 
-                                    key={`${item.relation_type}_${item.generation_level}`}
-                                    relation={item.relation}
-                                    arabic={item.arabic}
-                                    count={selected ? selected.count : 0}
-                                    max={item.max}
-                                    onAdd={() => handleAdd(item)}
-                                    onRemove={() => handleRemove(item.relation_type, item.generation_level)}
-                                />
-                            );
-                        })}
+                <div className="mobile-scroll-container" style={{ maxHeight: '70vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                    <div className="heir-list-grouped">
+                        {categories.map(cat => (
+                            <div key={cat} className="category-section mb-6">
+                                <h3 className="serif text-gold mb-3" style={{ fontSize: '1.1rem', borderBottom: '1px solid var(--border-elegant)', paddingBottom: '0.3rem' }}>{cat}</h3>
+                                <div className="grid gap-3">
+                                    {filteredRelations.filter(r => r.category === cat).map(item => {
+                                        const selected = selectedHeirs.find(h => h.relation_type === item.relation_type && h.generation_level === item.generation_level);
+                                        return (
+                                            <RelationCard 
+                                                key={`${item.relation_type}_${item.generation_level}`}
+                                                relation={item.relation}
+                                                arabic={item.arabic}
+                                                count={selected ? selected.count : 0}
+                                                max={item.max}
+                                                onAdd={() => handleAdd(item)}
+                                                onRemove={() => handleRemove(item.relation_type, item.generation_level)}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                <SelectionAudit 
-                    heirs={selectedHeirs} 
-                    onAdd={handleAuditAdd}
-                    onRemove={handleRemove}
-                    onClear={handleClear}
-                />
+                <div className="audit-sidebar">
+                    <SelectionAudit 
+                        heirs={selectedHeirs} 
+                        onAdd={handleAuditAdd}
+                        onRemove={handleRemove}
+                        onClear={handleClear}
+                    />
+                </div>
             </div>
 
             <div className="action-area">
                 <button className="btn-outline" onClick={onBack}>Back: Estate</button>
-                <button className="btn-primary" onClick={() => onHeirChange(selectedHeirs)}>
+                <button className="btn-primary" onClick={handleNext}>
                     Next: Case Summary
                 </button>
             </div>

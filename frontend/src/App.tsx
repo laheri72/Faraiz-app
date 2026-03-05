@@ -4,13 +4,22 @@ import HeirSelector from './pages/HeirSelector';
 import EstateForm from './pages/EstateForm';
 import CaseSummary from './pages/CaseSummary';
 import ResultsDisplay from './pages/ResultsDisplay';
+import HistoryPage from './pages/HistoryPage';
 import JurisprudenceHeader from './components/JurisprudenceHeader';
 import JurisprudenceFooter from './components/JurisprudenceFooter';
 import { calculateInheritance } from './api/client';
 import type { HeirInput, CalculationResult, VerificationData } from './types';
 import './styles/App.css';
 
-type Step = 'HOME' | 'ESTATE' | 'HEIRS' | 'SUMMARY' | 'RESULTS' | 'LOADING';
+type Step = 'HOME' | 'ESTATE' | 'HEIRS' | 'SUMMARY' | 'RESULTS' | 'LOADING' | 'HISTORY';
+
+interface SavedCase {
+  id: string;
+  timestamp: number;
+  estate: { value: number; debts: number; wasiyyah: number };
+  heirs: HeirInput[];
+  results: CalculationResult[];
+}
 
 interface CaseState {
   step: Step;
@@ -19,6 +28,7 @@ interface CaseState {
   results: CalculationResult[];
   verification: VerificationData | null;
   error: string | null;
+  history: SavedCase[];
 }
 
 const INITIAL_STATE: CaseState = {
@@ -27,13 +37,18 @@ const INITIAL_STATE: CaseState = {
   heirs: [],
   results: [],
   verification: null,
-  error: null
+  error: null,
+  history: []
 };
 
 const App: React.FC = () => {
   const [state, setState] = useState<CaseState>(() => {
     const saved = localStorage.getItem('fatemi_wirasat_case');
-    return saved ? JSON.parse(saved) : INITIAL_STATE;
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        return { ...INITIAL_STATE, ...parsed };
+    }
+    return INITIAL_STATE;
   });
 
   useEffect(() => {
@@ -59,6 +74,17 @@ const App: React.FC = () => {
     });
   };
 
+  const saveToHistory = (results: CalculationResult[]) => {
+    const newCase: SavedCase = {
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: Date.now(),
+        estate: state.estate,
+        heirs: state.heirs,
+        results: results
+    };
+    updateState({ history: [newCase, ...state.history] });
+  };
+
   const handleCalculate = async () => {
     updateState({ step: 'LOADING', error: null });
     try {
@@ -73,6 +99,8 @@ const App: React.FC = () => {
         throw new Error('Invalid response received from server.');
       }
 
+      saveToHistory(response.results);
+
       updateState({
         results: response.results,
         verification: response.verification || null,
@@ -85,9 +113,25 @@ const App: React.FC = () => {
     }
   };
 
+  const loadFromHistory = (saved: SavedCase) => {
+    updateState({
+        estate: saved.estate,
+        heirs: saved.heirs,
+        results: saved.results,
+        step: 'RESULTS',
+        verification: null
+    });
+  };
+
   const reset = () => {
-    setState(INITIAL_STATE);
-    localStorage.removeItem('fatemi_wirasat_case');
+    updateState({
+        step: 'HOME',
+        estate: { value: 0, debts: 0, wasiyyah: 0 },
+        heirs: [],
+        results: [],
+        verification: null,
+        error: null
+    });
   };
 
   const getStepNumber = (): number => {
@@ -97,6 +141,7 @@ const App: React.FC = () => {
       case 'SUMMARY': return 3;
       case 'LOADING': return 3;
       case 'RESULTS': return 4;
+      case 'HISTORY': return 0;
       default: return 0;
     }
   };
@@ -113,9 +158,21 @@ const App: React.FC = () => {
       
       <main className="container animate-fade">
         {state.step === 'HOME' && (
-          <Home onStart={() => updateState({ step: 'ESTATE' })} />
+          <Home 
+            onStart={() => updateState({ step: 'ESTATE' })} 
+            onViewHistory={() => updateState({ step: 'HISTORY' })}
+          />
         )}
         
+        {state.step === 'HISTORY' && (
+          <HistoryPage 
+            history={state.history}
+            onSelect={loadFromHistory}
+            onDelete={(id) => updateState({ history: state.history.filter(h => h.id !== id) })}
+            onBack={() => updateState({ step: 'HOME' })}
+          />
+        )}
+
         {state.step === 'ESTATE' && (
           <EstateForm 
             initialData={state.estate}

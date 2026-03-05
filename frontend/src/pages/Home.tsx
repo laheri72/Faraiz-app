@@ -1,10 +1,12 @@
 import React from 'react';
+import { Play, History } from 'lucide-react';
 
 interface Props {
     onStart: () => void;
+    onViewHistory: () => void;
 }
 
-const Home: React.FC<Props> = ({ onStart }) => {
+const Home: React.FC<Props> = ({ onStart, onViewHistory }) => {
     return (
         <div className="home-hero">
             <h1 className="serif">An Expert System for Fatemi Jurisprudence</h1>
@@ -13,10 +15,15 @@ const Home: React.FC<Props> = ({ onStart }) => {
                 calculations based on the established jurisprudence of the Fatemi school of thought. 
                 Navigate through the structured steps to determine legal shares with absolute clarity.
             </p>
-            <button className="btn-primary" onClick={onStart}>
-                Begin Calculation
-            </button>
-            <div className="mt-4">
+            <div className="flex gap-4 justify-center mt-6">
+                <button className="btn-primary flex items-center gap-2" onClick={onStart}>
+                    <Play size={18} /> Begin Calculation
+                </button>
+                <button className="btn-outline flex items-center gap-2" onClick={onViewHistory}>
+                    <History size={18} /> View History
+                </button>
+            </div>
+            <div className="mt-8">
                 <small className="text-muted">Structured • Precise • Verified</small>
             </div>
         </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { HeirInput } from '../types';
 import { Landmark, Users, ClipboardCheck } from 'lucide-react';
 
@@ -16,14 +16,21 @@ interface Props {
 const CaseSummary: React.FC<Props> = ({ caseState, onBack, onCalculate }) => {
     const { estate, heirs } = caseState;
     const netEstate = estate.value - estate.debts - estate.wasiyyah;
+    const summaryRef = useRef<HTMLDivElement>(null);
     
+    useEffect(() => {
+        if (summaryRef.current) {
+            summaryRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, []);
+
     // Percentages for visual bar
     const debtPct = (estate.debts / estate.value) * 100;
     const wasiyyahPct = (estate.wasiyyah / estate.value) * 100;
     const netPct = 100 - debtPct - wasiyyahPct;
 
     return (
-        <div className="animate-fade">
+        <div className="animate-fade" ref={summaryRef}>
             <div className="page-statement">
                 <h2 className="serif">Step 3: Case Summary</h2>
                 <p>Please verify the case details below before initiating the formal jurisprudence calculation.</p>

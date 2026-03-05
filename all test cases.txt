@@ -1,0 +1,1108 @@
+all test cases :
+1. 25 cases for -- grandfather/ grandmother
+
+
+
+Paternal Grandfather (PGF)
+
+Maternal Grandfather (MGF)
+
+Paternal Grandmother (PGM)
+
+Maternal Grandmother (MGM)
+
+No external heirs except where the text itself explicitly used them (like daughter, parents, siblings, nephew) — only to demonstrate that specific rule.
+
+We will cover:
+
+1/3 vs 2/3 side division
+
+Equal vs 2:1 division
+
+Closest blocks further
+
+Fixed 1/6 grandmother rule
+
+Competition with siblings
+
+Nephew replacing father
+
+Radd
+
+Blocking rules
+
+Multiple grandmothers
+
+Grandfather treated as brother
+
+🔷 SECTION A — Pure Grandparent Configurations
+✅ Case 1 — Only Paternal Grandparents
+
+Heirs:
+
+PGF
+
+PGM
+
+Rule: Entire estate, male double female.
+
+Distribution:
+PGF = 2/3
+PGM = 1/3
+
+✅ Case 2 — Only Maternal Grandparents
+
+Heirs:
+
+MGF
+
+MGM
+
+Rule: Entire estate, equal.
+
+MGF = 1/2
+MGM = 1/2
+
+✅ Case 3 — All Four Grandparents
+
+Heirs:
+
+PGF
+
+PGM
+
+MGF
+
+MGM
+
+Rule:
+Maternal side = 1/3
+Paternal side = 2/3
+
+Final:
+PGF = 4/9
+PGM = 2/9
+MGF = 1/6
+MGM = 1/6
+
+✅ Case 4 — PGF + PGM + Only MGF
+
+Maternal side (1 person) = 1/3
+Paternal side (2 persons) = 2/3
+
+MGF = 1/3
+
+Paternal (2:1 inside 2/3):
+PGF = 4/9
+PGM = 2/9
+
+✅ Case 5 — PGF + PGM + Only MGM
+
+Same as Case 4
+
+MGM = 1/3
+
+PGF = 4/9
+PGM = 2/9
+
+✅ Case 6 — MGF + MGM + Only PGF
+
+Maternal group = 1/3 → equal
+
+MGF = 1/6
+MGM = 1/6
+
+PGF alone = full 2/3
+
+✅ Case 7 — MGF + MGM + Only PGM
+
+Maternal group = 1/3 → equal
+
+MGF = 1/6
+MGM = 1/6
+
+PGM alone = full 2/3
+
+✅ Case 8 — Only PGF
+
+No one else.
+
+He gets entire estate via radd.
+
+PGF = 100%
+
+✅ Case 9 — Only MGF
+
+MGF = 100% (radd)
+
+✅ Case 10 — Only PGM
+
+PGM = 100% (radd)
+
+✅ Case 11 — Only MGM
+
+MGM = 100% (radd)
+
+🔷 SECTION B — Multiple Grandmothers (Blocking Rule)
+
+Text says:
+
+Closest blocks further.
+
+✅ Case 12 — 3 Paternal Grandmothers
+
+Only closest (mother of father) inherits.
+
+She takes entire estate (radd).
+Other two blocked.
+
+✅ Case 13 — 2 Maternal Grandmothers
+
+Only closest (mother of mother) inherits.
+She takes entire estate.
+
+✅ Case 14 — 3 PGM + 2 MGM (No other heir)
+
+Maternal group = 1/3
+Paternal group = 2/3
+
+But only closest per line counts:
+
+Closest PGM = 2/3
+Closest MGM = 1/3
+
+Others blocked.
+
+🔷 SECTION C — Fixed 1/6 Grandmother Rule
+
+From Hadith:
+
+Prophet gave grandmother 1/6 even when her son alive.
+
+✅ Case 15 — Father + PGM
+
+PGM = 1/6
+Father = 5/6
+
+✅ Case 16 — Mother + MGM
+
+MGM = 1/6
+Mother = 5/6
+
+✅ Case 17 — Father + Mother + One Grandmother
+
+Grandmother = 1/6
+Mother = 1/6
+Father = remainder (2/3)
+
+✅ Case 18 — Father + Two Grandmothers (PGM + MGM)
+
+Each grandmother = 1/6
+Father = remainder
+
+🔷 SECTION D — Grandfather Treated as Brother
+✅ Case 19 — PGF + 2 Maternal Brothers
+
+Maternal brothers = 1/3
+PGF = 2/3
+
+✅ Case 20 — PGF + 1 Maternal Brother
+
+Maternal brother = 1/6
+PGF = 5/6
+
+✅ Case 21 — MGF + 2 Paternal Brothers
+
+MGF = 1/6
+Paternal brothers = 5/6
+
+🔷 SECTION E — Grandfather with Nephew
+
+Text:
+
+Nephew inherits what father would inherit.
+
+✅ Case 22 — PGF + Nephew (son of brother)
+
+Treat as if:
+PGF + Brother
+
+Divide as siblings 2:1
+
+PGF = 2/3
+Nephew = 1/3
+
+✅ Case 23 — PGF + Multiple Nephews
+
+They inherit what their father would get, divided among them.
+
+Example:
+If father share = 1/3
+3 nephews divide equally inside that share.
+
+🔷 SECTION F — Daughter Example from Text
+✅ Case 24 — 3 PGM + 2 MGM + 1 Daughter
+
+Closest PGM = 1/6
+Closest MGM = 1/6
+Daughter = remainder (2/3)
+
+Others blocked.
+No radd to grandmothers.
+
+🔷 SECTION G — Grandfather + Grandmother + Brothers
+✅ Case 25 — PGF + PGM + Full Brother
+
+PGM = 1/6
+Remaining = divided between PGF and brother equally (as siblings).
+
+Remaining = 5/6
+
+PGF = 5/12
+Brother = 5/12
+
+
+
+
+
+
+2. 16 cases for children descendants :
+{
+  "suite_name": "Children_and_Descendants_Section_1329_1335",
+  "estate": 120000,
+  "cases": [
+
+    {
+      "case_id": "C1_children_male_female",
+      "description": "Male and female children only",
+      "heirs": [
+        {"relation": "Son", "count": 1},
+        {"relation": "Daughter", "count": 1}
+      ],
+      "expected_fractions": {
+        "Son": "2/3",
+        "Daughter": "1/3"
+      },
+      "expected_amounts": {
+        "Son": 80000,
+        "Daughter": 40000
+      }
+    },
+
+    {
+      "case_id": "C2_single_son",
+      "description": "Single son only",
+      "heirs": [
+        {"relation": "Son", "count": 1}
+      ],
+      "expected_fractions": {
+        "Son": "1"
+      },
+      "expected_amounts": {
+        "Son": 120000
+      }
+    },
+
+    {
+      "case_id": "C3_single_daughter",
+      "description": "Single daughter only (1/2 + radd)",
+      "heirs": [
+        {"relation": "Daughter", "count": 1}
+      ],
+      "expected_fractions": {
+        "Daughter": "1"
+      },
+      "expected_amounts": {
+        "Daughter": 120000
+      }
+    },
+
+    {
+      "case_id": "C4_two_daughters",
+      "description": "Two daughters only (2/3 + radd)",
+      "heirs": [
+        {"relation": "Daughter", "count": 2}
+      ],
+      "expected_fractions": {
+        "Daughter": "1/2"
+      },
+      "expected_amounts": {
+        "each_Daughter": 60000
+      }
+    },
+
+    {
+      "case_id": "C5_daughter_plus_sons_daughter",
+      "description": "Daughter + Daughter of Son",
+      "heirs": [
+        {"relation": "Daughter", "count": 1},
+        {"relation": "Daughter_of_Son", "count": 1}
+      ],
+      "expected_fractions": {
+        "Daughter": "1",
+        "Daughter_of_Son": "0"
+      }
+    },
+
+    {
+      "case_id": "C6_daughter_plus_sons_son",
+      "description": "Daughter + Son of Son",
+      "heirs": [
+        {"relation": "Daughter", "count": 1},
+        {"relation": "Son_of_Son", "count": 1}
+      ],
+      "expected_fractions": {
+        "Daughter": "1",
+        "Son_of_Son": "0"
+      }
+    },
+
+    {
+      "case_id": "C7_children_with_fixed_share_heir",
+      "description": "Children + fixed share heir (example Father)",
+      "heirs": [
+        {"relation": "Son", "count": 1},
+        {"relation": "Father", "count": 1}
+      ],
+      "expected_logic": "Father takes fixed share first (1/6), remainder to Son"
+    },
+
+    {
+      "case_id": "C8_grandchildren_only",
+      "description": "Grandchildren only (no children)",
+      "heirs": [
+        {"relation": "Son_of_Son", "count": 1},
+        {"relation": "Daughter_of_Son", "count": 1}
+      ],
+      "expected_fractions": {
+        "Son_of_Son": "2/3",
+        "Daughter_of_Son": "1/3"
+      }
+    },
+
+    {
+      "case_id": "C9_grandson_only",
+      "description": "Single grandson only",
+      "heirs": [
+        {"relation": "Son_of_Son", "count": 1}
+      ],
+      "expected_fractions": {
+        "Son_of_Son": "1"
+      }
+    },
+
+    {
+      "case_id": "C10_granddaughter_only",
+      "description": "Single granddaughter only",
+      "heirs": [
+        {"relation": "Daughter_of_Son", "count": 1}
+      ],
+      "expected_fractions": {
+        "Daughter_of_Son": "1"
+      }
+    },
+
+    {
+      "case_id": "C11_daughters_of_son_only",
+      "description": "Daughters of son only (no daughters present)",
+      "heirs": [
+        {"relation": "Daughter_of_Son", "count": 2}
+      ],
+      "expected_fractions": {
+        "Daughter_of_Son": "1/2"
+      }
+    },
+
+    {
+      "case_id": "C12_daughter_blocks_grandchildren",
+      "description": "Daughter + Son_of_Son + Daughter_of_Son",
+      "heirs": [
+        {"relation": "Daughter", "count": 1},
+        {"relation": "Son_of_Son", "count": 1},
+        {"relation": "Daughter_of_Son", "count": 1}
+      ],
+      "expected_fractions": {
+        "Daughter": "1",
+        "Son_of_Son": "0",
+        "Daughter_of_Son": "0"
+      }
+    },
+
+    {
+      "case_id": "C13_father_plus_grandson",
+      "description": "Father + Son_of_Son",
+      "heirs": [
+        {"relation": "Father", "count": 1},
+        {"relation": "Son_of_Son", "count": 1}
+      ],
+      "expected_fractions": {
+        "Father": "1/6",
+        "Son_of_Son": "5/6"
+      },
+      "expected_amounts": {
+        "Father": 20000,
+        "Son_of_Son": 100000
+      }
+    },
+
+    {
+      "case_id": "C14_depth_blocking",
+      "description": "Son_of_Son + Son_of_Son_of_Son",
+      "heirs": [
+        {"relation": "Son_of_Son", "count": 1},
+        {"relation": "Son_of_Son_of_Son", "count": 1}
+      ],
+      "expected_fractions": {
+        "Son_of_Son": "1",
+        "Son_of_Son_of_Son": "0"
+      }
+    },
+
+    {
+      "case_id": "C15_children_of_son_and_daughter_lines",
+      "description": "Son_of_Son + Son_of_Daughter",
+      "heirs": [
+        {"relation": "Son_of_Son", "count": 1},
+        {"relation": "Son_of_Daughter", "count": 1}
+      ],
+      "expected_fractions": {
+        "Son_of_Son": "2/3",
+        "Son_of_Daughter": "1/3"
+      }
+    },
+
+    {
+      "case_id": "C16_daughters_line_vs_sons_line",
+      "description": "Daughter_of_Son + Son_of_Daughter",
+      "heirs": [
+        {"relation": "Daughter_of_Son", "count": 1},
+        {"relation": "Son_of_Daughter", "count": 1}
+      ],
+      "expected_fractions": {
+        "Daughter_of_Son": "2/3",
+        "Son_of_Daughter": "1/3"
+      }
+    }
+
+  ]
+}
+
+
+
+3) 27 test cases for holistic heirs:
+{
+  "suite": "parents_spouses_siblings_grandparents_1336_1352",
+  "estate": 120000,
+  "cases": [
+
+    {
+      "id": "T1",
+      "heirs": {"Father":1,"Mother":1},
+      "expected":{"Father":"2/3","Mother":"1/3"}
+    },
+
+    {
+      "id": "T2",
+      "heirs":{"Father":1,"Mother":1,"Son":1},
+      "expected":{"Father":"1/6","Mother":"1/6","Son":"2/3"}
+    },
+
+    {
+      "id": "T3",
+      "heirs":{"Father":1,"Mother":1,"Son":1,"Daughter":1},
+      "expected":{
+        "Father":"1/6",
+        "Mother":"1/6",
+        "Son":"4/9",
+        "Daughter":"2/9"
+      }
+    },
+
+    {
+      "id": "T4",
+      "heirs":{"Father":1,"Mother":1,"Daughter":1},
+      "expected":{"Father":"1/6","Mother":"1/6","Daughter":"2/3"}
+    },
+
+    {
+      "id": "T5",
+      "heirs":{"Mother":1,"Daughter":1},
+      "expected":{"Mother":"1/6","Daughter":"5/6"}
+    },
+
+    {
+      "id": "T6",
+      "heirs":{"Father":1,"Daughter":1},
+      "expected":{"Father":"1/6","Daughter":"5/6"}
+    },
+
+    {
+      "id": "T7",
+      "heirs":{"Father":1,"Mother":1,"Brother_full":2},
+      "expected":{"Mother":"1/6","Father":"5/6"}
+    },
+
+    {
+      "id": "T8",
+      "heirs":{"Father":1,"Mother":1,"Brother_maternal":2},
+      "expected":{"Mother":"1/3","Father":"2/3"}
+    },
+
+    {
+      "id": "T9",
+      "heirs":{"Mother":1,"Brother_full":2},
+      "expected":{"Mother":"1"}
+    },
+
+    {
+      "id": "T10",
+      "heirs":{"Husband":1},
+      "expected":{"Husband":"1/2"}
+    },
+
+    {
+      "id": "T11",
+      "heirs":{"Wife":1},
+      "expected":{"Wife":"1/4"}
+    },
+
+    {
+      "id": "T12",
+      "heirs":{"Husband":1,"Son":1},
+      "expected":{"Husband":"1/4","Son":"3/4"}
+    },
+
+    {
+      "id": "T13",
+      "heirs":{"Wife":1,"Son":1},
+      "expected":{"Wife":"1/8","Son":"7/8"}
+    },
+
+    {
+      "id": "T14",
+      "heirs":{"Wife":1,"Father":1,"Mother":1},
+      "expected":{"Wife":"1/4","Mother":"1/3","Father":"5/12"}
+    },
+
+    {
+      "id": "T15",
+      "heirs":{"Husband":1,"Father":1,"Mother":1},
+      "expected":{"Husband":"1/2","Mother":"1/3","Father":"1/6"}
+    },
+
+    {
+      "id": "T16",
+      "heirs":{"Sister_full":1},
+      "expected":{"Sister_full":"1/2"}
+    },
+
+    {
+      "id": "T17",
+      "heirs":{"Sister_full":2},
+      "expected":{"Sister_full":"2/3"}
+    },
+
+    {
+      "id": "T18",
+      "heirs":{"Brother_full":1,"Sister_full":1},
+      "expected":{"Brother_full":"2/3","Sister_full":"1/3"}
+    },
+
+    {
+      "id": "T19",
+      "heirs":{"Brother_maternal":1},
+      "expected":{"Brother_maternal":"1/6"}
+    },
+
+    {
+      "id": "T20",
+      "heirs":{"Brother_maternal":2},
+      "expected":{"Brother_maternal":"1/3"}
+    },
+
+    {
+      "id": "T21",
+      "heirs":{"Brother_full":1,"Brother_maternal":1},
+      "expected":{"Brother_full":"2/3","Brother_maternal":"1/3"}
+    },
+
+    {
+      "id": "T22",
+      "heirs":{"Brother_full":1,"Sister_maternal":1},
+      "expected":{"Brother_full":"2/3","Sister_maternal":"1/3"}
+    },
+
+    {
+      "id": "T23",
+      "heirs":{"Grandfather_paternal":1,"Brother_full":1},
+      "expected":{"Grandfather_paternal":"1/2","Brother_full":"1/2"}
+    },
+
+    {
+      "id": "T24",
+      "heirs":{"Grandfather_paternal":1,"Nephew":1},
+      "expected":{"Grandfather_paternal":"1/2","Nephew":"1/2"}
+    },
+
+    {
+      "id": "T25",
+      "heirs":{
+        "Grandfather_paternal":1,
+        "Grandmother_paternal":1
+      },
+      "expected":{
+        "Grandfather_paternal":"2/3",
+        "Grandmother_paternal":"1/3"
+      }
+    },
+
+    {
+      "id": "T26",
+      "heirs":{
+        "Grandfather_paternal":1,
+        "Grandmother_paternal":1,
+        "Grandfather_maternal":1,
+        "Grandmother_maternal":1
+      },
+      "expected":{
+        "Maternal_side":"1/3",
+        "Paternal_side":"2/3"
+      }
+    },
+
+    {
+      "id": "T27",
+      "heirs":{"Grandmother":1},
+      "expected":{"Grandmother":"1/6"}
+    }
+
+  ]
+}
+
+
+
+
+4) 4 test cases for spouse related : 
+
+{
+  "suite": "faraiḍ_section_1390_1394",
+  "estate": 120000,
+  "cases": [
+
+    {
+      "case_id": "F1_wife_only",
+      "description": "Man dies leaving only wife",
+      "heirs": [
+        {"relation": "Wife", "count": 1}
+      ],
+      "expected_fractions": {
+        "Wife": "1"
+      },
+      "expected_amounts": {
+        "Wife": 120000
+      }
+    },
+
+    {
+      "case_id": "F2_husband_only",
+      "description": "Woman dies leaving only husband",
+      "heirs": [
+        {"relation": "Husband", "count": 1}
+      ],
+      "expected_fractions": {
+        "Husband": "1"
+      },
+      "expected_amounts": {
+        "Husband": 120000
+      }
+    },
+
+    {
+      "case_id": "F3_no_heirs_will",
+      "description": "No heirs, estate given by will",
+      "heirs": [],
+      "expected_distribution": "Will beneficiaries receive estate"
+    },
+
+    {
+      "case_id": "F4_no_heirs_public_distribution",
+      "description": "No heirs, estate assigned to community member",
+      "heirs": [],
+      "expected_distribution": "Estate assigned by authority"
+    }
+
+  ]
+}
+
+
+
+
+
+5) parent + children cases -- 6 cases : 
+
+{
+  "suite": "inheritance_calculation_examples",
+  "estate": 120000,
+  "cases": [
+
+    {
+      "case_id": "H1_husband_6_sons",
+      "heirs": {
+        "Husband": 1,
+        "Son": 6
+      },
+      "expected": {
+        "Husband": "1/4",
+        "Each_Son": "1/8"
+      }
+    },
+
+    {
+      "case_id": "H2_husband_5_sons",
+      "heirs": {
+        "Husband": 1,
+        "Son": 5
+      },
+      "expected": {
+        "Husband": "1/4",
+        "Each_Son": "3/20"
+      }
+    },
+
+    {
+      "case_id": "H3_husband_5_sisters_grandfather",
+      "heirs": {
+        "Husband": 1,
+        "Sister_full": 5,
+        "Grandfather_paternal": 1
+      },
+      "expected": {
+        "Husband": "1/2",
+        "Each_Sister": "1/14",
+        "Grandfather_paternal": "1/7"
+      }
+    },
+
+    {
+      "case_id": "H4_daughter_parent_radd",
+      "heirs": {
+        "Daughter": 1,
+        "Father": 1
+      },
+      "expected": {
+        "Daughter": "3/4",
+        "Father": "1/4"
+      }
+    },
+
+    {
+      "case_id": "H5_husband_daughter_father",
+      "heirs": {
+        "Husband": 1,
+        "Daughter": 1,
+        "Father": 1
+      },
+      "expected": {
+        "Husband": "1/4",
+        "Daughter": "9/16",
+        "Father": "3/16"
+      }
+    },
+
+    {
+      "case_id": "H6_wife_20_daughters_father",
+      "heirs": {
+        "Wife": 1,
+        "Daughter": 20,
+        "Father": 1
+      },
+      "expected": {
+        "Wife": "1/8",
+        "Father": "7/40",
+        "Each_Daughter": "7/200"
+      }
+    }
+
+  ]
+}
+
+
+
+6) 8 cases - dhawul ahram 
+
+
+{
+  "suite": "dhawu_al_arham_inheritance",
+  "estate": 120000,
+  "cases": [
+
+    {
+      "id": "A1_aunt_maternal_aunt",
+      "heirs": {
+        "Aunt_paternal": 1,
+        "Aunt_maternal": 1
+      },
+      "expected": {
+        "Aunt_paternal": "2/3",
+        "Aunt_maternal": "1/3"
+      }
+    },
+
+    {
+      "id": "A2_maternal_and_paternal_uncles",
+      "heirs": {
+        "Uncle_paternal": 1,
+        "Aunt_paternal": 1,
+        "Uncle_maternal": 1,
+        "Aunt_maternal": 1
+      },
+      "expected": {
+        "Maternal_side_total": "1/3",
+        "Paternal_side_total": "2/3"
+      }
+    },
+
+    {
+      "id": "A3_maternal_cousin_vs_uncle",
+      "heirs": {
+        "Son_of_maternal_uncle": 1,
+        "Uncle_paternal": 1,
+        "Aunt_paternal": 1
+      },
+      "expected": {
+        "Uncle_paternal": "2/3",
+        "Aunt_paternal": "1/3",
+        "Son_of_maternal_uncle": "0"
+      }
+    },
+
+    {
+      "id": "A4_paternal_cousins_vs_maternal_uncles",
+      "heirs": {
+        "Cousin_paternal": 2,
+        "Uncle_maternal": 1,
+        "Aunt_maternal": 1
+      },
+      "expected": {
+        "Maternal_side_total": "1"
+      }
+    },
+
+    {
+      "id": "A5_son_of_aunt_vs_daughter_of_uncle",
+      "heirs": {
+        "Son_of_aunt": 1,
+        "Daughter_of_uncle": 1
+      },
+      "expected": {
+        "Son_of_aunt": "2/3",
+        "Daughter_of_uncle": "1/3"
+      }
+    },
+
+    {
+      "id": "A6_representation_rule",
+      "heirs": {
+        "Cousins_from_multiple_siblings": 4
+      },
+      "expected": {
+        "Rule": "Each inherits share of their parent"
+      }
+    },
+
+    {
+      "id": "A7_closest_blocks_further",
+      "heirs": {
+        "Son": 1,
+        "Grandson": 1
+      },
+      "expected": {
+        "Son": "1",
+        "Grandson": "0"
+      }
+    },
+
+    {
+      "id": "A8_fixed_share_overrides_agnates",
+      "heirs": {
+        "Daughter": 1,
+        "Uncle": 1
+      },
+      "expected": {
+        "Daughter": "1",
+        "Uncle": "0"
+      }
+    }
+
+  ]
+}
+
+
+
+
+7) core rules and test cases : 16 imp cases :
+
+
+{
+  "suite": "faraid_core_rules",
+  "estate": 120000,
+  "cases": [
+
+    {
+      "id": "T1_son_and_daughter",
+      "heirs": {"Son":1,"Daughter":1},
+      "expected":{"Son":"2/3","Daughter":"1/3"}
+    },
+
+    {
+      "id": "T2_sons_only",
+      "heirs":{"Son":2},
+      "expected":{"Each_Son":"1/2"}
+    },
+
+    {
+      "id": "T3_single_son",
+      "heirs":{"Son":1},
+      "expected":{"Son":"1"}
+    },
+
+    {
+      "id": "T4_two_daughters",
+      "heirs":{"Daughter":2},
+      "expected":{"Each_Daughter":"1/2"}
+    },
+
+    {
+      "id": "T5_single_daughter",
+      "heirs":{"Daughter":1},
+      "expected":{"Daughter":"1"}
+    },
+
+    {
+      "id": "T6_parents_only",
+      "heirs":{"Father":1,"Mother":1},
+      "expected":{"Mother":"1/3","Father":"2/3"}
+    },
+
+    {
+      "id": "T7_parents_and_son",
+      "heirs":{"Father":1,"Mother":1,"Son":1},
+      "expected":{"Father":"1/6","Mother":"1/6","Son":"2/3"}
+    },
+
+    {
+      "id": "T8_parents_and_daughter",
+      "heirs":{"Father":1,"Mother":1,"Daughter":1},
+      "expected":{"Daughter":"1/2","Father":"1/4","Mother":"1/4"}
+    },
+
+    {
+      "id": "T9_father_and_daughter",
+      "heirs":{"Father":1,"Daughter":1},
+      "expected":{"Daughter":"3/4","Father":"1/4"}
+    },
+
+    {
+      "id": "T10_mother_and_daughter",
+      "heirs":{"Mother":1,"Daughter":1},
+      "expected":{"Daughter":"3/4","Mother":"1/4"}
+    },
+
+    {
+      "id": "T11_parents_and_siblings",
+      "heirs":{"Father":1,"Mother":1,"Brother":2},
+      "expected":{"Mother":"1/6","Father":"5/6","Brother":"0"}
+    },
+
+    {
+      "id": "T12_parents_and_maternal_siblings",
+      "heirs":{"Father":1,"Mother":1,"Brother_maternal":2},
+      "expected":{"Mother":"1/3","Father":"2/3","Brother_maternal":"0"}
+    },
+
+    {
+      "id": "T13_husband_no_children",
+      "heirs":{"Husband":1},
+      "expected":{"Husband":"1/2"}
+    },
+
+    {
+      "id": "T14_husband_with_children",
+      "heirs":{"Husband":1,"Son":1},
+      "expected":{"Husband":"1/4","Son":"3/4"}
+    },
+
+    {
+      "id": "T15_wife_no_children",
+      "heirs":{"Wife":1},
+      "expected":{"Wife":"1/4"}
+    },
+
+    {
+      "id": "T16_wife_with_children",
+      "heirs":{"Wife":1,"Son":1},
+      "expected":{"Wife":"1/8","Son":"7/8"}
+    }
+
+  ]
+}
+
+
+
+8) 25 test cases : holistic and comprehensive test cases
+
+
+{
+  "suite": "daaim_al_islam_faraid_validation",
+  "cases": [
+
+    {"id":"T1","heirs":{"Grandson":1,"Father":1},"expected":{"Father":"1/6","Grandson":"5/6"}},
+    {"id":"T2","heirs":{"Granddaughter":1,"Father":1},"expected":{"Father":"1/6","Granddaughter":"5/6"}},
+    {"id":"T3","heirs":{"DaughtersSon":1,"Father":1},"expected":{"Father":"1/6","DaughtersSon":"1/2","Radd":"1/3"}},
+    
+    {"id":"T4","heirs":{"Wife":1,"Father":1,"Mother":1,"Grandmother":1,"Son":1},"expected":{"Wife":"1/8","Parents":"1/3","Grandmother":"1/6","Son":"remainder"}},
+    
+    {"id":"T5","heirs":{"Husband":1,"Grandson":1,"Granddaughter":1},"expected":{"Husband":"1/4"}},
+    
+    {"id":"T6","heirs":{"Husband":1,"Father":1,"Mother":1},"expected":{"Husband":"1/2","Mother":"1/3","Father":"1/6"}},
+
+    {"id":"T7","heirs":{"MaternalSibling":2},"expected":{"Group":"1/3_equal"}},
+    
+    {"id":"T8","heirs":{"MaternalSibling":1},"expected":{"Sibling":"1/6","Radd":"5/6"}},
+
+    {"id":"T9","heirs":{"MaternalNephews":2,"FullNephews":3},"expected":{"Maternal":"1/3","Full":"2/3"}},
+
+    {"id":"T10","heirs":{"Grandfather":1,"Nephew":1},"expected":{"Grandfather":"1/2","Nephew":"1/2"}},
+
+    {"id":"T11","heirs":{"Grandfather":1,"MaternalSiblings":2},"expected":{"Maternal":"1/3","Grandfather":"2/3"}},
+
+    {"id":"T12","heirs":{"Grandfather":1,"MaternalSibling":1},"expected":{"Sibling":"1/6","Grandfather":"5/6"}},
+
+    {"id":"T13","heirs":{"MaternalGrandfather":1,"PaternalSiblings":2},"expected":{"Grandfather":"1/6","Siblings":"5/6"}},
+
+    {"id":"T14","heirs":{"Grandmothers":2,"Nephew":1},"expected":{"Grandmothers":"1/3","Nephew":"2/3"}},
+
+    {"id":"T15","heirs":{"GrandmotherMaternal":1,"GrandmotherPaternal":1,"Daughter":1},"expected":{"EachGrandmother":"1/6","Daughter":"2/3"}},
+
+    {"id":"T16","heirs":{"Grandmother":1,"Father":1,"Mother":1,"Siblings":2},"expected":{"Grandmother":"1/6","Mother":"1/6","Father":"remainder"}},
+
+    {"id":"T17","heirs":{"Grandmother":1,"Grandfather":1,"BrotherFull":1,"BrotherPaternal":1},"expected":{"Grandmother":"1/6","Others":"remainder"}},
+
+    {"id":"T18","heirs":{"Grandmother":1,"Brother":1},"expected":{"Grandmother":"1/6"}},
+
+    {"id":"T19","heirs":{"FullAunt":1,"MaternalAunt":1},"expected":{"FullAunt":"5/6","MaternalAunt":"1/6"}},
+
+    {"id":"T20","heirs":{"MaternalUncle":1,"MaternalAunt":1,"PaternalUncle":1,"PaternalAunt":1},"expected":{"Maternal":"1/3_equal","Paternal":"2/3_ratio"}},
+
+    {"id":"T21","heirs":{"MaternalGrandfather":1,"MaternalUncle":1,"MaternalAunt":1},"expected":{"Grandfather":"1"}},
+
+    {"id":"T22","heirs":{"MaternalUncle":1,"MaternalAunt":1},"expected":{"Each":"1/2"}},
+
+    {"id":"T23","heirs":{"PaternalAunt":1,"MaternalAunt":1},"expected":{"PaternalAunt":"2/3","MaternalAunt":"1/3"}},
+
+    {"id":"T24","heirs":{"PaternalUncle":1,"BrothersGranddaughter":1},"expected":{"Granddaughter":"1"}},
+
+    {"id":"T25","heirs":{"MaternalUncle":1,"SistersSon":1},"expected":{"SistersSon":"1"}}
+    
+  ]
+}

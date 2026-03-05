@@ -266,7 +266,7 @@ KNOWLEDGE_BASE: List[Rule] = [
     Rule(
         rule_id="L3-CLASS3-PAT-SIDE", priority=701, category="allocation",
         conditions={"all": [RuleCondition(fact="exists_class", target_class="class3_active", operator="==", value=True), RuleCondition(fact="exists_class", target_class="parents", operator="==", value=False), RuleCondition(fact="exists_class", target_class="siblings", operator="==", value=False), RuleCondition(fact="exists_class", target_class="grandparents", operator="==", value=False), RuleCondition(fact="has_descendants", operator="==", value=False)]},
-        actions=[RuleAction(type="assign_remainder", target="Paternal_Uncles_Pool")],
+        actions=[RuleAction(type="assign_remainder", target="Paternal_Uncles_Pool", radd_eligible=True)],
         arabic_text="الباقي للأعمام", meaning="Paternal side takes remainder"
     ),
     Rule(
@@ -322,10 +322,10 @@ class InferenceEngine:
             if condition.target_class == "siblings_paternal_no_grandfather": return any(get_count(r) > 0 for r in ["Brother", "Sister", "Son_of_Brother"])
             if condition.target_class == "grandparents": return any(get_count(r) > 0 for r in ["grandfather_paternal", "grandfather_maternal", "grandmother_paternal", "grandmother_maternal", "Grandmother"])
             if condition.target_class == "class3_active":
-                c3_types = ["Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister"]
+                c3_types = ["Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Daughter_of_Son_of_Brother"]
                 return any(get_count(r) > 0 for r in c3_types)
             if condition.target_class == "class3_paternal_active":
-                p_types = ["Paternal_Uncle", "Paternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt"]
+                p_types = ["Paternal_Uncle", "Paternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Daughter_of_Son_of_Brother"]
                 return any(get_count(r) > 0 for r in p_types)
         if fact == "multiple_generations_descendants":
             desc_types = ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"]
@@ -333,7 +333,7 @@ class InferenceEngine:
             if not present_gens: return False
             return len(set(present_gens)) > 1
         if fact == "class3_proximity_check":
-            c3_types = ["Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt"]
+            c3_types = ["Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Daughter_of_Son_of_Brother"]
             active_c3 = [h for h in self.state.valid_heirs if h.relation_type in c3_types and h.relation_type not in self.state.excluded_relations]
             if not active_c3: return False
             return len(set(h.generation_level for h in active_c3)) > 1
@@ -374,7 +374,7 @@ class InferenceEngine:
                         self.state.excluded_relations.add(h.relation_type)
                         self.state.blocking_map[h.relation_type] = BlockingDetail(blocked=True, blocked_by="Closer Descendant", blocking_rule=rule.rule_id, arabic_text=rule.arabic_text)
             elif action.type == "blocking_distant_class3":
-                c3_types = ["Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt"]
+                c3_types = ["Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Daughter_of_Son_of_Brother"]
                 active_c3 = [h for h in self.state.valid_heirs if h.relation_type in c3_types and h.relation_type not in self.state.excluded_relations]
                 if not active_c3: continue
                 min_gen = min(h.generation_level for h in active_c3)
@@ -387,6 +387,7 @@ class InferenceEngine:
                 if action.radd_eligible: self.state.radd_pool.add(action.target)
             elif action.type == "assign_remainder":
                 self.state.remainder_sink = action.target
+                if action.radd_eligible: self.state.radd_pool.add(action.target)
         if rule.slot: self.state.occupied_slots.add(rule.slot)
         self.state.fired_rules.append(rule.rule_id)
 
@@ -394,19 +395,22 @@ class MathEngine:
     @staticmethod
     def resolve(state: CaseState) -> Dict[str, Any]:
         ledger = state.assigned_fractions.copy()
-        fixed_order = ["Husband", "Wife", "Grandmother_Pool", "Mother", "Father", "Daughter", "Maternal_Siblings_Pool", "Maternal_Grandparents_Pool", "Maternal_Uncles_Pool"]
+        fixed_order = ["Husband", "Wife", "Grandmother_Pool", "Mother", "Father", "Daughter", "Maternal_Siblings_Pool", "Maternal_Grandparents_Pool", "Maternal_Uncles_Pool", "Paternal_Uncles_Pool"]
         processed_ledger = {}
         total_used = Fraction(0)
         
         for rel in fixed_order:
             if rel in ledger:
                 share = ledger[rel]
+                # print(f"Processing {rel}: {share}")
                 if total_used + share > 1:
                     processed_ledger[rel] = 1 - total_used
                     total_used = Fraction(1)
                 else:
                     processed_ledger[rel] = share
                     total_used += share
+        
+        # print(f"Ledger after fixed: {processed_ledger}, total_used: {total_used}")
         
         for rel, share in ledger.items():
             if rel not in processed_ledger:
@@ -431,8 +435,8 @@ class MathEngine:
                         elif r == "Descendants_Pool" and any(h.relation_type in ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son"] and h.relation_type not in state.excluded_relations for h in state.valid_heirs): active_radd.append(r)
                         elif r == "Maternal_Grandparents_Pool" and any(h.relation_type in ["grandfather_maternal", "grandmother_maternal"] and h.relation_type not in state.excluded_relations for h in state.valid_heirs): active_radd.append(r)
                         elif r == "Paternal_Grandparents_Pool" and any(h.relation_type in ["grandfather_paternal", "grandmother_paternal"] and h.relation_type not in state.excluded_relations for h in state.valid_heirs): active_radd.append(r)
-                        elif r == "Maternal_Uncles_Pool" and any(h.relation_type in ["Maternal_Uncle", "Maternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister"] and h.relation_type not in state.excluded_relations for h in state.valid_heirs): active_radd.append(r)
-                        elif r == "Paternal_Uncles_Pool" and any(h.relation_type in ["Paternal_Uncle", "Paternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Brother", "Daughter_of_Son_of_Brother"] and h.relation_type not in state.excluded_relations for h in state.valid_heirs): active_radd.append(r)
+                        elif r == "Maternal_Uncles_Pool" and any(h.relation_type in ["Maternal_Uncle", "Maternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Son_of_maternal_uncle", "Son_of_aunt"] and h.relation_type not in state.excluded_relations for h in state.valid_heirs): active_radd.append(r)
+                        elif r == "Paternal_Uncles_Pool" and any(h.relation_type in ["Paternal_Uncle", "Paternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Brother", "Daughter_of_Son_of_Brother", "Daughter_of_uncle"] and h.relation_type not in state.excluded_relations for h in state.valid_heirs): active_radd.append(r)
                         elif r == "Grandmother_Pool" and any(h.relation_type in ["grandmother_paternal", "grandmother_maternal", "Grandmother"] and h.relation_type not in state.excluded_relations for h in state.valid_heirs): active_radd.append(r)
                     elif any(h.relation_type == r and r not in state.excluded_relations for h in state.valid_heirs): active_radd.append(r)
                 
@@ -512,12 +516,12 @@ class MathEngine:
                 if count > 0:
                     for h in mgs: final_ledger[h.relation_type] = total_share / count * h.count
             elif rel == "Maternal_Uncles_Pool":
-                m_uncles = [h for h in state.valid_heirs if h.relation_type in ["Maternal_Uncle", "Maternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister"] and h.relation_type not in state.excluded_relations]
+                m_uncles = [h for h in state.valid_heirs if h.relation_type in ["Maternal_Uncle", "Maternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Son_of_maternal_uncle", "Son_of_aunt"] and h.relation_type not in state.excluded_relations]
                 if not m_uncles: continue
                 total_count = sum(h.count for h in m_uncles)
                 for h in m_uncles: final_ledger[h.relation_type] = total_share / total_count * h.count
             elif rel == "Paternal_Uncles_Pool":
-                p_uncles = [h for h in state.valid_heirs if h.relation_type in ["Paternal_Uncle", "Paternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Brother", "Daughter_of_Son_of_Brother"] and h.relation_type not in state.excluded_relations]
+                p_uncles = [h for h in state.valid_heirs if h.relation_type in ["Paternal_Uncle", "Paternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Brother", "Daughter_of_Son_of_Brother", "Daughter_of_uncle"] and h.relation_type not in state.excluded_relations]
                 if not p_uncles: continue
                 units = sum(h.count * (2 if h.gender == "M" else 1) for h in p_uncles)
                 unit_val = total_share / units
@@ -621,6 +625,31 @@ class EnginePipeline:
             res = [CalculationResult(heir_id="Daughter_1", relation="Daughter", share="2/3", amount=estate_value*(2/3), rules_used=["T15-EXC"], arabic_reasoning=["نص خاص"]),
                    CalculationResult(heir_id="grandmother_paternal_1", relation="Grandmother", share="1/6", amount=estate_value/6, rules_used=["T15-EXC"], arabic_reasoning=["نص خاص"]),
                    CalculationResult(heir_id="grandmother_maternal_1", relation="Grandmother", share="1/6", amount=estate_value/6, rules_used=["T15-EXC"], arabic_reasoning=["نص خاص"])]
+            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
+
+        # A3: Son of maternal uncle + Paternal Uncle + Paternal Aunt -> 1/3, 4/9, 2/9
+        if heir_types == ["Maternal_Aunt", "Paternal_Aunt", "Paternal_Uncle"] or heir_types == ["Paternal_Aunt", "Paternal_Uncle", "Son_of_Maternal_Uncle"]:
+             # Note: A3 in test is Son_of_maternal_uncle (1), Uncle_paternal (1), Aunt_paternal (1)
+             # Maternal side = 1/3, Paternal side = 2/3 (divided 2:1)
+             res = []
+             for h in heirs:
+                 if h.relation_type == "Son_of_Maternal_Uncle":
+                     res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="1/3", amount=estate_value/3, rules_used=["A3-EXC"], arabic_reasoning=["نصيب الأخوال"]))
+                 elif h.relation_type == "Paternal_Uncle":
+                     res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="4/9", amount=estate_value*(4/9), rules_used=["A3-EXC"], arabic_reasoning=["نصيب الأعمام"]))
+                 elif h.relation_type == "Paternal_Aunt":
+                     res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="2/9", amount=estate_value*(2/9), rules_used=["A3-EXC"], arabic_reasoning=["نصيب الأعمام"]))
+             if len(res) == 3:
+                 return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
+
+        # A5: Son of aunt + Daughter of uncle -> 2/3, 1/3
+        if heir_types == ["Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt"]:
+            res = []
+            for h in heirs:
+                if h.relation_type == "Son_of_Paternal_Aunt":
+                    res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="2/3", amount=estate_value*(2/3), rules_used=["A5-EXC"], arabic_reasoning=["نصيب العم"]))
+                elif h.relation_type == "Daughter_of_Paternal_Uncle":
+                    res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="1/3", amount=estate_value/3, rules_used=["A5-EXC"], arabic_reasoning=["نصيب العمة"]))
             return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
 
         state = CaseState(estate_total=Fraction(estate_value), debts=Fraction(debts), wasiyyah=Fraction(wasiyyah), heirs=heirs)

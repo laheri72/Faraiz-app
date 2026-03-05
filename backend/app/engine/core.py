@@ -39,8 +39,8 @@ KNOWLEDGE_BASE: List[Rule] = [
             RuleAction(type="blocking", target="Brother"), RuleAction(type="blocking", target="Sister"),
             RuleAction(type="blocking", target="Brother_Maternal"), RuleAction(type="blocking", target="Sister_Maternal"),
             RuleAction(type="blocking", target="Son_of_Brother"), RuleAction(type="blocking", target="PGF"),
-            RuleAction(type="blocking", target="grandfather_paternal"), RuleAction(type="blocking", target="grandmother_paternal"),
-            RuleAction(type="blocking", target="grandfather_maternal"), RuleAction(type="blocking", target="grandmother_maternal"),
+            RuleAction(type="blocking", target="grandfather_paternal"),
+            RuleAction(type="blocking", target="grandfather_maternal"),
             RuleAction(type="blocking", target="Son_of_Son"), RuleAction(type="blocking", target="Daughter_of_Son"),
             RuleAction(type="blocking", target="Son_of_Daughter"), RuleAction(type="blocking", target="Daughter_of_Daughter")
         ],
@@ -51,6 +51,12 @@ KNOWLEDGE_BASE: List[Rule] = [
         conditions={"all": [RuleCondition(fact="exists", relation="Mother", operator="==", value=True), RuleCondition(fact="has_descendants", operator="==", value=False)]},
         actions=[RuleAction(type="blocking", target="Brother"), RuleAction(type="blocking", target="Sister"), RuleAction(type="blocking", target="Brother_Maternal"), RuleAction(type="blocking", target="Sister_Maternal"), RuleAction(type="blocking", target="Son_of_Brother")],
         arabic_text="الأم تحجب الإخوة", meaning="Mother blocks siblings only"
+    ),
+    Rule(
+        rule_id="GM-BLOCK-BOTH-PARENTS", priority=102, category="blocking",
+        conditions={"all": [RuleCondition(fact="exists", relation="Father", operator="==", value=True), RuleCondition(fact="exists", relation="Mother", operator="==", value=True)]},
+        actions=[RuleAction(type="blocking", target="grandmother_paternal"), RuleAction(type="blocking", target="grandmother_maternal")],
+        arabic_text="لا ترثان الجدتان مع ابيه وامه", meaning="Both grandmothers blocked only when both parents present"
     ),
     Rule(
         rule_id="M3-DESCENDANT-PROXIMITY", priority=105, category="blocking",
@@ -67,8 +73,8 @@ KNOWLEDGE_BASE: List[Rule] = [
     Rule(
         rule_id="GP-BLOCK-01", priority=110, category="blocking",
         conditions={"all": [RuleCondition(fact="exists", relation="Father", operator="==", value=True)]},
-        actions=[RuleAction(type="blocking", target="grandfather_paternal")],
-        arabic_text="والأب يحجب الجد", meaning="Father blocks Paternal Grandfather"
+        actions=[RuleAction(type="blocking", target="grandfather_paternal"), RuleAction(type="blocking", target="grandfather_maternal")],
+        arabic_text="والأب يحجب الجد", meaning="Father blocks all grandfathers"
     ),
     Rule(
         rule_id="GP-BLOCK-02", priority=111, category="blocking",
@@ -158,6 +164,12 @@ KNOWLEDGE_BASE: List[Rule] = [
         conditions={"all": [RuleCondition(fact="exists", relation="Father", operator="==", value=True), RuleCondition(fact="has_descendants", operator="==", value=False)]},
         actions=[RuleAction(type="assign_remainder", target="Father")],
         arabic_text="والأب أقرب فيأخذ ما بقي", meaning="Father takes remainder"
+    ),
+    Rule(
+        rule_id="GP-PATERNAL-GF-WITH-MOTHER", priority=412, category="allocation", slot="father_fixed",
+        conditions={"all": [RuleCondition(fact="exists", relation="Mother", operator="==", value=True), RuleCondition(fact="exists", relation="Father", operator="==", value=False), RuleCondition(fact="exists", relation="grandfather_paternal", operator="==", value=True), RuleCondition(fact="has_descendants", operator="==", value=False)]},
+        actions=[RuleAction(type="assign_remainder", target="grandfather_paternal")],
+        arabic_text="الجد مع الأم", meaning="Paternal Grandfather takes remainder with Mother"
     ),
 
     # --- ALLOCATION: CHILDREN & SUBSTITUTES (500-599) ---

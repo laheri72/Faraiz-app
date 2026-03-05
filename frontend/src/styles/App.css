@@ -731,6 +731,13 @@ button,
     grid-template-columns: 1fr;
   }
 }
+/* Responsive Utils */
+@media (max-width: 640px) {
+  .hidden-mobile {
+    display: none;
+  }
+}
+
 /* Print & Export Styles */
 .print-only {
   display: none;

@@ -4,6 +4,7 @@ import { formatCurrencyIndian, numberToWords } from '../api/utils';
 interface Props {
     initialData: { value: number, debts: number, wasiyyah: number };
     onNext: (value: number, debts: number, wasiyyah: number) => void;
+    onBack: () => void;
 }
 
 const AmountPreview: React.FC<{ value: string, currency: string }> = ({ value, currency }) => {
@@ -19,7 +20,7 @@ const AmountPreview: React.FC<{ value: string, currency: string }> = ({ value, c
     );
 };
 
-const EstateForm: React.FC<Props> = ({ initialData, onNext }) => {
+const EstateForm: React.FC<Props> = ({ initialData, onNext, onBack }) => {
     const [value, setValue] = useState<string>(initialData.value ? initialData.value.toString() : '');
     const [debts, setDebts] = useState<string>(initialData.debts ? initialData.debts.toString() : '');
     const [wasiyyah, setWasiyyah] = useState<string>(initialData.wasiyyah ? initialData.wasiyyah.toString() : '');
@@ -113,7 +114,7 @@ const EstateForm: React.FC<Props> = ({ initialData, onNext }) => {
             </div>
 
             <div className="action-area">
-                <div />
+                <button className="btn-outline" onClick={onBack}>Back: Home</button>
                 <button 
                     className="btn-primary" 
                     disabled={!value || parseFloat(value) <= 0 || isWasiyyahOverLimit || isDebtOverLimit}

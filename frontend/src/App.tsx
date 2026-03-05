@@ -148,7 +148,11 @@ const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      <JurisprudenceHeader step={getStepNumber()} />
+      <JurisprudenceHeader 
+        step={getStepNumber()} 
+        onHome={() => updateState({ step: 'HOME' })}
+        onHistory={() => updateState({ step: 'HISTORY' })}
+      />
 
       {state.error && (
         <div className="error-banner" style={{ color: 'var(--error)', margin: '1rem', fontWeight: 'bold', background: '#fee2e2', padding: '1rem', borderRadius: '0.25rem' }}>
@@ -177,6 +181,7 @@ const App: React.FC = () => {
           <EstateForm 
             initialData={state.estate}
             onNext={handleEstateSubmit} 
+            onBack={() => updateState({ step: 'HOME' })}
           />
         )}
 

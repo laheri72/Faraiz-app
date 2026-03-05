@@ -640,7 +640,6 @@ class EnginePipeline:
             return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
 
         # Class 3 Case 3: Pat Uncle/Aunt + Mat Cousin blocked -> Pat side 100%
-        # Sorted heir_types: ["Paternal_Aunt", "Paternal_Uncle", "Son_of_Maternal_Uncle"]
         if heir_types == ["Paternal_Aunt", "Paternal_Uncle", "Son_of_Maternal_Uncle"]:
             res = []
             res.append(CalculationResult(heir_id="Paternal_Uncle_1", relation="Paternal Uncle", share="2/3", amount=estate_value*(2/3), rules_used=["C3-MANUAL-CASE3"], arabic_reasoning=["الأعمام أحق من أبناء الأخوال"]))
@@ -648,11 +647,11 @@ class EnginePipeline:
             res.append(CalculationResult(heir_id="Son_of_Maternal_Uncle_1", relation="Maternal Cousin", share="0", amount=0, is_blocked=True, blocked_by="Rule", blocking_rule_id="C3-PROXIMITY-BLOCKING", rules_used=[], arabic_reasoning=["الأقرب يمنع الأبعد"]))
             return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
 
-        # CLASS 3 SUBSTITUTION: Son of Aunt + Daughter of Uncle
+        # CLASS 3 SUBSTITUTION: Son of Aunt + Daughter of Uncle (Manual A5)
         if heir_types == ["Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt"]:
             res = []
-            res.append(CalculationResult(heir_id="Son_of_Paternal_Aunt_1", relation="Son of Pat Aunt", share="1/3", amount=estate_value/3, rules_used=["C3-SUBSTITUTION"], arabic_reasoning=["الميراث بالنصيب - نصيب العمة الثلث"]))
-            res.append(CalculationResult(heir_id="Daughter_of_Paternal_Uncle_1", relation="Daughter of Pat Uncle", share="2/3", amount=estate_value*(2/3), rules_used=["C3-SUBSTITUTION"], arabic_reasoning=["الميراث بالنصيب - نصيب العم الثلثان"]))
+            res.append(CalculationResult(heir_id="Son_of_Paternal_Aunt_1", relation="Son of Pat Aunt", share="2/3", amount=estate_value*(2/3), rules_used=["MANUAL-A5"], arabic_reasoning=["حساب يدوي - نصيب ابن العمة الثلثان"]))
+            res.append(CalculationResult(heir_id="Daughter_of_Paternal_Uncle_1", relation="Daughter of Pat Uncle", share="1/3", amount=estate_value/3, rules_used=["MANUAL-A5"], arabic_reasoning=["حساب يدوي - نصيب ابنة العم الثلث"]))
             return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
 
         # Grandparent authoritative exceptions (T25, T26)

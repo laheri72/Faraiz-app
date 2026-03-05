@@ -35,7 +35,7 @@ const ResultsDisplay: React.FC<Props> = ({ results, verification, onBack }) => {
             ['SUMMARY'],
             ['Total Estate (Net)', `"${totalDistributed.toFixed(2)}"`],
             ['Total Allocated', `"${totalDistributed.toFixed(2)}"`],
-            ['Verification Status', `"${verification?.is_balanced ? 'VERIFIED' : 'UNBALANCED'}"`],
+            ['Verification Status', `"${(verification?.status === 'VALID' || verification?.is_balanced) ? 'VERIFIED' : 'UNBALANCED'}"`],
             ['Jurisprudence Check', '"PASSED"']
         ];
 

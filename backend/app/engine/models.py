@@ -88,12 +88,14 @@ class VerificationData(BaseModel):
     total_distributed: float
     fraction_sum: str
     status: str # VALID or INVALID
+    is_balanced: bool = False
 
 class CalculationResult(BaseModel):
     heir_id: str
     relation: str
     share: str 
     amount: float
+    share_percentage: float = 0.0
     rules_used: List[str]
     arabic_reasoning: List[str]
     is_blocked: bool = False

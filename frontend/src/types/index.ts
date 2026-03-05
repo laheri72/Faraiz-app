@@ -16,6 +16,7 @@ export interface CalculationResult {
     relation: string;
     share: string;
     amount: number;
+    share_percentage?: number;
     rules_used: string[];
     arabic_reasoning: string[];
     is_blocked: boolean;
@@ -28,6 +29,7 @@ export interface VerificationData {
     total_distributed: number;
     fraction_sum: string;
     status: 'VALID' | 'INVALID';
+    is_balanced?: boolean;
 }
 
 export interface CalculationRequest {

@@ -1,6 +1,5 @@
 import React from 'react';
 import type { CalculationResult, VerificationData } from '../types';
-import { formatCurrencyIndian } from '../api/utils';
 
 interface Props {
     results: CalculationResult[];
@@ -9,7 +8,7 @@ interface Props {
 
 const ResultsLedger: React.FC<Props> = ({ results, verification }) => {
     const totalDistributed = results.reduce((acc, curr) => acc + curr.amount, 0);
-    const isVerified = verification?.is_balanced;
+    const isVerified = verification?.status === 'VALID' || verification?.is_balanced;
 
     return (
         <div className="results-ledger print-only" style={{ padding: '2rem', background: 'white', color: 'black', fontFamily: 'serif' }}>

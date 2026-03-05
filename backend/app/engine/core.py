@@ -553,12 +553,20 @@ class MathEngine:
 
         total_fraction = sum(h.fraction for h in individual_results if not h.blocking)
         total_distributed = sum(h.amount for h in individual_results if not h.blocking)
-        verification = VerificationData(estate_total=float(state.estate_total), total_distributed=float(total_distributed), fraction_sum=str(total_fraction), status="VALID" if total_fraction == 1 else "INVALID")
+        is_balanced = total_fraction == 1
+        verification = VerificationData(
+            estate_total=float(state.estate_total), 
+            total_distributed=float(total_distributed), 
+            fraction_sum=str(total_fraction), 
+            status="VALID" if is_balanced else "INVALID",
+            is_balanced=is_balanced
+        )
         
         final_results = []
         for ir in individual_results:
             final_results.append(CalculationResult(
                 heir_id=ir.heir_id, relation=ir.relation, share=str(ir.fraction.limit_denominator()), amount=round(float(ir.amount), 2),
+                share_percentage=float(ir.fraction),
                 rules_used=state.fired_rules, arabic_reasoning=[rule.arabic_text for rid in state.fired_rules for rule in KNOWLEDGE_BASE if rule.rule_id == rid],
                 is_blocked=ir.blocking.blocked if ir.blocking else False, blocked_by=ir.blocking.blocked_by if ir.blocking else None, blocking_rule_id=ir.blocking.blocking_rule if ir.blocking else None
             ))
@@ -572,21 +580,21 @@ class EnginePipeline:
         
         # T23: Pat Aunt + Mat Aunt -> 2/3, 1/3
         if heir_types == ["Maternal_Aunt", "Paternal_Aunt"] and counts.get("Paternal_Aunt") == 1 and counts.get("Maternal_Aunt") == 1:
-            res = [CalculationResult(heir_id="Paternal_Aunt_1", relation="Paternal Aunt", share="2/3", amount=estate_value*(2/3), rules_used=["T23-EXC"], arabic_reasoning=["نص خاص"]),
-                   CalculationResult(heir_id="Maternal_Aunt_1", relation="Maternal Aunt", share="1/3", amount=estate_value/3, rules_used=["T23-EXC"], arabic_reasoning=["نص خاص"])]
-            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
+            res = [CalculationResult(heir_id="Paternal_Aunt_1", relation="Paternal Aunt", share="2/3", amount=estate_value*(2/3), share_percentage=2/3, rules_used=["T23-EXC"], arabic_reasoning=["نص خاص"]),
+                   CalculationResult(heir_id="Maternal_Aunt_1", relation="Maternal Aunt", share="1/3", amount=estate_value/3, share_percentage=1/3, rules_used=["T23-EXC"], arabic_reasoning=["نص خاص"])]
+            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID", is_balanced=True)}
 
         # T24: Pat Uncle + Bro GD -> GD 1
         if heir_types == ["Daughter_of_Son_of_Brother", "Paternal_Uncle"]:
-            res = [CalculationResult(heir_id="Daughter_of_Son_of_Brother_1", relation="BrothersGD", share="1", amount=estate_value, rules_used=["T24-EXC"], arabic_reasoning=["الولد أحق"]),
-                   CalculationResult(heir_id="Paternal_Uncle_1", relation="Paternal Uncle", share="0", amount=0, is_blocked=True, blocked_by="Rule", blocking_rule_id="T24-EXC", rules_used=[], arabic_reasoning=["الولد أحق"])]
-            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
+            res = [CalculationResult(heir_id="Daughter_of_Son_of_Brother_1", relation="BrothersGD", share="1", amount=estate_value, share_percentage=1.0, rules_used=["T24-EXC"], arabic_reasoning=["الولد أحق"]),
+                   CalculationResult(heir_id="Paternal_Uncle_1", relation="Paternal Uncle", share="0", amount=0, share_percentage=0.0, is_blocked=True, blocked_by="Rule", blocking_rule_id="T24-EXC", rules_used=[], arabic_reasoning=["الولد أحق"])]
+            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID", is_balanced=True)}
 
         # T25: Mat Uncle + Sister's Son -> Son 1
         if heir_types == ["Maternal_Uncle", "Son_of_Sister"]:
-            res = [CalculationResult(heir_id="Son_of_Sister_1", relation="SistersSon", share="1", amount=estate_value, rules_used=["T25-EXC"], arabic_reasoning=["الولد أحق"]),
-                   CalculationResult(heir_id="Maternal_Uncle_1", relation="Maternal Uncle", share="0", amount=0, is_blocked=True, blocked_by="Rule", blocking_rule_id="T25-EXC", rules_used=[], arabic_reasoning=["الولد أحق"])]
-            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
+            res = [CalculationResult(heir_id="Son_of_Sister_1", relation="SistersSon", share="1", amount=estate_value, share_percentage=1.0, rules_used=["T25-EXC"], arabic_reasoning=["الولد أحق"]),
+                   CalculationResult(heir_id="Maternal_Uncle_1", relation="Maternal Uncle", share="0", amount=0, share_percentage=0.0, is_blocked=True, blocked_by="Rule", blocking_rule_id="T25-EXC", rules_used=[], arabic_reasoning=["الولد أحق"])]
+            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID", is_balanced=True)}
 
         # T9: Maternal Nephews + Full Nephews -> 1/3, 2/3
         if heir_types == ["Son_of_Brother", "Son_of_Sister"]:
@@ -594,40 +602,40 @@ class EnginePipeline:
             m_count = counts.get("Son_of_Sister")
             f_count = counts.get("Son_of_Brother")
             for i in range(1, f_count + 1):
-                res.append(CalculationResult(heir_id=f"Son_of_Brother_{i}", relation="Full Nephew", share=str(Fraction(2, 3*f_count)), amount=(estate_value*2/3)/f_count, rules_used=["T9-EXC"], arabic_reasoning=["نصيب الأب"]))
+                res.append(CalculationResult(heir_id=f"Son_of_Brother_{i}", relation="Full Nephew", share=str(Fraction(2, 3*f_count)), amount=(estate_value*2/3)/f_count, share_percentage=(2/3)/f_count, rules_used=["T9-EXC"], arabic_reasoning=["نصيب الأب"]))
             for i in range(1, m_count + 1):
-                res.append(CalculationResult(heir_id=f"Son_of_Sister_{i}", relation="Mat Nephew", share=str(Fraction(1, 3*m_count)), amount=(estate_value/3)/m_count, rules_used=["T9-EXC"], arabic_reasoning=["نصيب الأم"]))
-            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
+                res.append(CalculationResult(heir_id=f"Son_of_Sister_{i}", relation="Mat Nephew", share=str(Fraction(1, 3*m_count)), amount=(estate_value/3)/m_count, share_percentage=(1/3)/m_count, rules_used=["T9-EXC"], arabic_reasoning=["نصيب الأم"]))
+            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID", is_balanced=True)}
 
         # T13: Maternal GF + Paternal Siblings -> 1/6, 5/6
         if heir_types == ["Brother", "grandfather_maternal"]:
             res = []
-            res.append(CalculationResult(heir_id="grandfather_maternal_1", relation="Maternal GF", share="1/6", amount=estate_value/6, rules_used=["T13-EXC"], arabic_reasoning=["نص خاص"]))
+            res.append(CalculationResult(heir_id="grandfather_maternal_1", relation="Maternal GF", share="1/6", amount=estate_value/6, share_percentage=1/6, rules_used=["T13-EXC"], arabic_reasoning=["نص خاص"]))
             b_count = counts.get("Brother")
             for i in range(1, b_count + 1):
-                res.append(CalculationResult(heir_id=f"Brother_{i}", relation="Brother", share=str(Fraction(5, 6*b_count)), amount=(estate_value*5/6)/b_count, rules_used=["T13-EXC"], arabic_reasoning=["نص خاص"]))
-            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
+                res.append(CalculationResult(heir_id=f"Brother_{i}", relation="Brother", share=str(Fraction(5, 6*b_count)), amount=(estate_value*5/6)/b_count, share_percentage=(5/6)/b_count, rules_used=["T13-EXC"], arabic_reasoning=["نص خاص"]))
+            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID", is_balanced=True)}
 
         # T21: Mat GF + Mat Uncle + Mat Aunt -> GF 1
         if heir_types == ["Maternal_Aunt", "Maternal_Uncle", "grandfather_maternal"]:
-            res = [CalculationResult(heir_id="grandfather_maternal_1", relation="Maternal GF", share="1", amount=estate_value, rules_used=["T21-EXC"], arabic_reasoning=["الأقرب يمنع الأبعد"]),
-                   CalculationResult(heir_id="Maternal_Uncle_1", relation="Maternal Uncle", share="0", amount=0, is_blocked=True, blocked_by="Rule", blocking_rule_id="T21-EXC", rules_used=[], arabic_reasoning=["الأقرب يمنع الأبعد"]),
-                   CalculationResult(heir_id="Maternal_Aunt_1", relation="Maternal Aunt", share="0", amount=0, is_blocked=True, blocked_by="Rule", blocking_rule_id="T21-EXC", rules_used=[], arabic_reasoning=["الأقرب يمنع الأبعد"])]
-            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
+            res = [CalculationResult(heir_id="grandfather_maternal_1", relation="Maternal GF", share="1", amount=estate_value, share_percentage=1.0, rules_used=["T21-EXC"], arabic_reasoning=["الأقرب يمنع الأبعد"]),
+                   CalculationResult(heir_id="Maternal_Uncle_1", relation="Maternal Uncle", share="0", amount=0, share_percentage=0.0, is_blocked=True, blocked_by="Rule", blocking_rule_id="T21-EXC", rules_used=[], arabic_reasoning=["الأقرب يمنع الأبعد"]),
+                   CalculationResult(heir_id="Maternal_Aunt_1", relation="Maternal Aunt", share="0", amount=0, share_percentage=0.0, is_blocked=True, blocked_by="Rule", blocking_rule_id="T21-EXC", rules_used=[], arabic_reasoning=["الأقرب يمنع الأبعد"])]
+            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID", is_balanced=True)}
 
         # T14: 2 Grandmothers + Nephew -> GM 1/3, Nephew 2/3
         if heir_types == ["Son_of_Brother", "grandmother_maternal", "grandmother_paternal"]:
-            res = [CalculationResult(heir_id="grandmother_paternal_1", relation="Grandmother", share="1/6", amount=estate_value/6, rules_used=["T14-EXC"], arabic_reasoning=["نص خاص"]),
-                   CalculationResult(heir_id="grandmother_maternal_1", relation="Grandmother", share="1/6", amount=estate_value/6, rules_used=["T14-EXC"], arabic_reasoning=["نص خاص"]),
-                   CalculationResult(heir_id="Son_of_Brother_1", relation="Nephew", share="2/3", amount=estate_value*(2/3), rules_used=["T14-EXC"], arabic_reasoning=["نص خاص"])]
-            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
+            res = [CalculationResult(heir_id="grandmother_paternal_1", relation="Grandmother", share="1/6", amount=estate_value/6, share_percentage=1/6, rules_used=["T14-EXC"], arabic_reasoning=["نص خاص"]),
+                   CalculationResult(heir_id="grandmother_maternal_1", relation="Grandmother", share="1/6", amount=estate_value/6, share_percentage=1/6, rules_used=["T14-EXC"], arabic_reasoning=["نص خاص"]),
+                   CalculationResult(heir_id="Son_of_Brother_1", relation="Nephew", share="2/3", amount=estate_value*(2/3), share_percentage=2/3, rules_used=["T14-EXC"], arabic_reasoning=["نص خاص"])]
+            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID", is_balanced=True)}
 
         # T15: Daughter + 2 Grandmothers -> Daughter 2/3, GM 1/3
         if heir_types == ["Daughter", "grandmother_maternal", "grandmother_paternal"]:
-            res = [CalculationResult(heir_id="Daughter_1", relation="Daughter", share="2/3", amount=estate_value*(2/3), rules_used=["T15-EXC"], arabic_reasoning=["نص خاص"]),
-                   CalculationResult(heir_id="grandmother_paternal_1", relation="Grandmother", share="1/6", amount=estate_value/6, rules_used=["T15-EXC"], arabic_reasoning=["نص خاص"]),
-                   CalculationResult(heir_id="grandmother_maternal_1", relation="Grandmother", share="1/6", amount=estate_value/6, rules_used=["T15-EXC"], arabic_reasoning=["نص خاص"])]
-            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
+            res = [CalculationResult(heir_id="Daughter_1", relation="Daughter", share="2/3", amount=estate_value*(2/3), share_percentage=2/3, rules_used=["T15-EXC"], arabic_reasoning=["نص خاص"]),
+                   CalculationResult(heir_id="grandmother_paternal_1", relation="Grandmother", share="1/6", amount=estate_value/6, share_percentage=1/6, rules_used=["T15-EXC"], arabic_reasoning=["نص خاص"]),
+                   CalculationResult(heir_id="grandmother_maternal_1", relation="Grandmother", share="1/6", amount=estate_value/6, share_percentage=1/6, rules_used=["T15-EXC"], arabic_reasoning=["نص خاص"])]
+            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID", is_balanced=True)}
 
         # A3: Son of maternal uncle + Paternal Uncle + Paternal Aunt -> 1/3, 4/9, 2/9
         if heir_types == ["Maternal_Aunt", "Paternal_Aunt", "Paternal_Uncle"] or heir_types == ["Paternal_Aunt", "Paternal_Uncle", "Son_of_Maternal_Uncle"]:
@@ -636,23 +644,23 @@ class EnginePipeline:
              res = []
              for h in heirs:
                  if h.relation_type == "Son_of_Maternal_Uncle":
-                     res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="1/3", amount=estate_value/3, rules_used=["A3-EXC"], arabic_reasoning=["نصيب الأخوال"]))
+                     res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="1/3", amount=estate_value/3, share_percentage=1/3, rules_used=["A3-EXC"], arabic_reasoning=["نصيب الأخوال"]))
                  elif h.relation_type == "Paternal_Uncle":
-                     res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="4/9", amount=estate_value*(4/9), rules_used=["A3-EXC"], arabic_reasoning=["نصيب الأعمام"]))
+                     res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="4/9", amount=estate_value*(4/9), share_percentage=4/9, rules_used=["A3-EXC"], arabic_reasoning=["نصيب الأعمام"]))
                  elif h.relation_type == "Paternal_Aunt":
-                     res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="2/9", amount=estate_value*(2/9), rules_used=["A3-EXC"], arabic_reasoning=["نصيب الأعمام"]))
+                     res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="2/9", amount=estate_value*(2/9), share_percentage=2/9, rules_used=["A3-EXC"], arabic_reasoning=["نصيب الأعمام"]))
              if len(res) == 3:
-                 return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
+                 return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID", is_balanced=True)}
 
         # A5: Son of aunt + Daughter of uncle -> 2/3, 1/3
         if heir_types == ["Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt"]:
             res = []
             for h in heirs:
                 if h.relation_type == "Son_of_Paternal_Aunt":
-                    res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="2/3", amount=estate_value*(2/3), rules_used=["A5-EXC"], arabic_reasoning=["نصيب العم"]))
+                    res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="2/3", amount=estate_value*(2/3), share_percentage=2/3, rules_used=["A5-EXC"], arabic_reasoning=["نصيب العم"]))
                 elif h.relation_type == "Daughter_of_Paternal_Uncle":
-                    res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="1/3", amount=estate_value/3, rules_used=["A5-EXC"], arabic_reasoning=["نصيب العمة"]))
-            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID")}
+                    res.append(CalculationResult(heir_id=f"{h.relation_type}_1", relation=h.relation, share="1/3", amount=estate_value/3, share_percentage=1/3, rules_used=["A5-EXC"], arabic_reasoning=["نصيب العمة"]))
+            return {"results": res, "verification": VerificationData(estate_total=estate_value, total_distributed=estate_value, fraction_sum="1", status="VALID", is_balanced=True)}
 
         state = CaseState(estate_total=Fraction(estate_value), debts=Fraction(debts), wasiyyah=Fraction(wasiyyah), heirs=heirs)
         state.valid_heirs = heirs

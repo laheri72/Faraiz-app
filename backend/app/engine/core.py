@@ -47,10 +47,14 @@ KNOWLEDGE_BASE: List[Rule] = [
         arabic_text="الولد أحق", meaning="Children block all Class 2 and grandchildren"
     ),
     Rule(
-        rule_id="M2-MOTHER-BLOCK-SIBLINGS", priority=101, category="blocking",
-        conditions={"all": [RuleCondition(fact="exists", relation="Mother", operator="==", value=True), RuleCondition(fact="has_descendants", operator="==", value=False)]},
-        actions=[RuleAction(type="blocking", target="Brother_Maternal"), RuleAction(type="blocking", target="Sister_Maternal")],
-        arabic_text="الأم تحجب الإخوة لأم", meaning="Mother blocks maternal siblings"
+        rule_id="M2-PARENTS-BLOCK-SIBLINGS-AND-GP", priority=101, category="blocking",
+        conditions={"any": [RuleCondition(fact="exists", relation="Mother", operator="==", value=True), RuleCondition(fact="exists", relation="Father", operator="==", value=True)]},
+        actions=[
+            RuleAction(type="blocking", target="Brother"), RuleAction(type="blocking", target="Sister"),
+            RuleAction(type="blocking", target="Brother_Maternal"), RuleAction(type="blocking", target="Sister_Maternal"),
+            RuleAction(type="blocking", target="grandfather_paternal"), RuleAction(type="blocking", target="grandfather_maternal")
+        ],
+        arabic_text="الأب والأم يحجبان الإخوة والأجداد", meaning="Parents block all siblings and grandfathers"
     ),
     Rule(
         rule_id="GM-BLOCK-BOTH-PARENTS", priority=102, category="blocking",
@@ -136,11 +140,11 @@ KNOWLEDGE_BASE: List[Rule] = [
             "all": [
                 RuleCondition(fact="exists", relation="Mother", operator="==", value=True),
                 RuleCondition(fact="exists", relation="Father", operator="==", value=True),
-                RuleCondition(fact="total_brothers_raw", operator=">=", value=2)
+                RuleCondition(fact="total_brothers_raw", operator=">=", value=4)
             ]
         },
         actions=[RuleAction(type="assign_fraction", target="Mother", value="1/6", radd_eligible=False)],
-        arabic_text="فإن كان له إخوة فلأمه السدس", meaning="Mother reduced to 1/6 by 2+ siblings (Full/Paternal) with Father"
+        arabic_text="فإن كان له إخوة فلأمه السدس", meaning="Mother reduced to 1/6 by siblings (Strength >= 2 males) with Father"
     ),
     Rule(
         rule_id="L2-MOTHER-CHILD", priority=401, category="allocation", slot="mother_fixed",
@@ -221,7 +225,7 @@ KNOWLEDGE_BASE: List[Rule] = [
     ),
     Rule(
         rule_id="GP-FIXED-1342", priority=595, category="allocation", slot="gm_fixed",
-        conditions={"all": [RuleCondition(fact="exists_gm", operator="==", value=True)]},
+        conditions={"all": [RuleCondition(fact="exists_gm", operator="==", value=True), RuleCondition(fact="active_mode", operator="!=", value="MODE_A")]},
         actions=[RuleAction(type="assign_fraction", target="Grandmother_Pool", value="1/6", radd_eligible=True)],
         arabic_text="للجدة السدس", meaning="Grandmother 1/6 (Rule 1342)"
     ),
@@ -232,10 +236,20 @@ KNOWLEDGE_BASE: List[Rule] = [
         arabic_text="فله السدس", meaning="Lone maternal sibling gets 1/6"
     ),
     Rule(
-        rule_id="L3-MATERNAL-SIB-FIXED-MULTI", priority=601, category="allocation", slot="mat_sib_fixed",
-        conditions={"all": [RuleCondition(fact="has_descendants", operator="==", value=False), RuleCondition(fact="exists_class", target_class="parents", operator="==", value=False), RuleCondition(fact="total_maternal_siblings", operator=">=", value=2)]},
-        actions=[RuleAction(type="assign_fraction", target="Maternal_Siblings_Pool", value="1/3", radd_eligible=True)],
-        arabic_text="فهم شركاء في الثلث", meaning="Maternal siblings share in 1/3"
+        rule_id="L3-CLASS2-SIDE-SPLIT", priority=605, category="allocation",
+        conditions={
+            "all": [
+                RuleCondition(fact="has_descendants", operator="==", value=False),
+                RuleCondition(fact="exists_class", target_class="parents", operator="==", value=False),
+                RuleCondition(fact="exists_class", target_class="siblings_paternal", operator="==", value=True),
+                RuleCondition(fact="total_maternal_siblings", operator=">=", value=1)
+            ]
+        },
+        actions=[
+            RuleAction(type="assign_fraction", target="Maternal_Siblings_Pool", value="1/3", radd_eligible=True),
+            RuleAction(type="assign_fraction", target="Siblings_Pool", value="2/3", radd_eligible=True)
+        ],
+        arabic_text="للإخوة من الأم الثلث والباقي للإخوة من الأب", meaning="Maternal side 1/3, Paternal side 2/3 in Class 2"
     ),
     Rule(
         rule_id="L3-SIBLINGS-REMAINDER", priority=610, category="allocation",
@@ -318,7 +332,8 @@ class InferenceEngine:
         if fact == "has_wasiyyah": return self.state.wasiyyah > 0
         if fact == "active_mode": return self.state.active_mode
         if fact == "total_brothers_raw":
-            return get_count_raw("Brother") + get_count_raw("Sister")
+            # Rule: Brother = 2 points, Sister = 1 point. Reduction threshold is 4 points.
+            return (get_count_raw("Brother") * 2) + get_count_raw("Sister")
         if fact == "total_maternal_siblings":
             return get_count("Brother_Maternal") + get_count("Sister_Maternal")
         if fact == "has_descendants":
@@ -504,8 +519,10 @@ class MathEngine:
                         u_val = d_pool / total_count if total_count > 0 else 0
                         for h in daughter_line: final_ledger[h.relation_type] = u_val * h.count
             elif rel == "Siblings_Pool":
-                siblings = [h for h in state.valid_heirs if h.relation_type in ["Brother", "Sister", "grandfather_paternal", "Son_of_Brother"] and h.relation_type not in state.excluded_relations]
+                siblings = [h for h in state.valid_heirs if h.relation_type in ["Brother", "Sister", "grandfather_paternal", "grandmother_paternal", "Son_of_Brother"] and h.relation_type not in state.excluded_relations]
                 if siblings:
+                    # Special Rule for Grandparents: If ONLY GFs and GMs exist in this pool, use male-double-female.
+                    # If siblings exist, Grandmother usually gets her fixed 1/6 (handled by GP-FIXED-1342 and priority).
                     units = sum(h.count * (2 if h.gender == "M" else 1) for h in siblings)
                     u_val = total_share / units if units > 0 else 0
                     for h in siblings: final_ledger[h.relation_type] = u_val * (2 if h.gender == "M" else 1) * h.count

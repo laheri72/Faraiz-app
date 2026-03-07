@@ -1,18 +1,20 @@
 import React from 'react';
-import type { CalculationResult, VerificationData } from '../types';
+import type { CalculationResult, VerificationData, CalculationStep } from '../types';
 import { RotateCcw, ShieldCheck, Printer, Download } from 'lucide-react';
 import ResultsTable from '../components/ResultsTable';
 import VerificationPanel from '../components/VerificationPanel';
 import SummaryOverview from '../components/SummaryOverview';
 import ResultsLedger from '../components/ResultsLedger';
+import MathDistributionCard from '../components/MathDistributionCard';
 
 interface Props {
     results: CalculationResult[];
+    calculation_steps: CalculationStep[];
     verification: VerificationData | null;
     onBack: () => void;
 }
 
-const ResultsDisplay: React.FC<Props> = ({ results, verification, onBack }) => {
+const ResultsDisplay: React.FC<Props> = ({ results, calculation_steps, verification, onBack }) => {
     const handlePrint = () => {
         window.print();
     };
@@ -79,6 +81,8 @@ const ResultsDisplay: React.FC<Props> = ({ results, verification, onBack }) => {
                 </div>
 
                 <div className="no-print">
+                    <MathDistributionCard steps={calculation_steps} />
+                    
                     <SummaryOverview results={results} />
 
                     <div className="section-title serif mt-4" style={{ marginBottom: '1.5rem' }}>

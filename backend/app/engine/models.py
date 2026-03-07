@@ -108,7 +108,14 @@ class CalculationRequest(BaseModel):
     wasiyyah: float = 0.0
     heirs: List[Heir]
 
+class CalculationStep(BaseModel):
+    title: str
+    description: str
+    math_details: Optional[str] = None
+    items: List[str] = []
+
 class CalculationResponse(BaseModel):
     case_id: int
     results: List[CalculationResult]
     verification: VerificationData
+    calculation_steps: List[CalculationStep] = []

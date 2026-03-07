@@ -26,6 +26,7 @@ const EstateInput: React.FC<Props> = ({ initialData, onNext }) => {
                     placeholder="Enter total amount (e.g., 240,000)" 
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
+                    onWheel={(e) => e.currentTarget.blur()}
                 />
             </div>
 
@@ -37,6 +38,7 @@ const EstateInput: React.FC<Props> = ({ initialData, onNext }) => {
                     placeholder="Enter debts to be paid (e.g., 10,000)" 
                     value={debts}
                     onChange={(e) => setDebts(e.target.value)}
+                    onWheel={(e) => e.currentTarget.blur()}
                 />
             </div>
 
@@ -48,6 +50,7 @@ const EstateInput: React.FC<Props> = ({ initialData, onNext }) => {
                     placeholder="Enter will amount if applicable (e.g., 20,000)" 
                     value={wasiyyah}
                     onChange={(e) => setWasiyyah(e.target.value)}
+                    onWheel={(e) => e.currentTarget.blur()}
                 />
             </div>
 

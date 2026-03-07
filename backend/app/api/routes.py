@@ -1,13 +1,23 @@
+import json
+import os
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 from ..database.session import get_db
 from ..database.schema import CaseRecord, ResultRecord
-from ..engine.core import EnginePipeline
+from ..engine.core import EnginePipeline, KNOWLEDGE_BASE
 from ..engine.models import Heir, CalculationResponse, CalculationRequest
 
 router = APIRouter()
 engine = EnginePipeline()
+
+@router.get("/rules")
+def get_rules():
+    try:
+        # Return the actual rules used by the engine
+        return [rule.model_dump() for rule in KNOWLEDGE_BASE]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/calculate", response_model=CalculationResponse)
 def calculate_inheritance(req: CalculationRequest, db: Session = Depends(get_db)):
@@ -50,7 +60,8 @@ def calculate_inheritance(req: CalculationRequest, db: Session = Depends(get_db)
         return {
             "case_id": new_case.id,
             "results": results,
-            "verification": verification
+            "verification": verification,
+            "calculation_steps": output.get("calculation_steps", [])
         }
     except ValueError as ve:
         print(f">>> INTEGRITY ERROR: {str(ve)}")

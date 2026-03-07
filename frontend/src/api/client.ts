@@ -20,12 +20,12 @@ export const calculateInheritance = async (data: CalculationRequest): Promise<Ca
     }
 };
 
-export const getCase = async (caseId: number): Promise<CalculationResponse> => {
+export const getRules = async (): Promise<any[]> => {
     try {
-        const response = await client.get<CalculationResponse>(`/cases/${caseId}`);
+        const response = await client.get<any[]>('/rules');
         return response.data;
     } catch (error) {
-        console.error('Full error response:', error);
-        throw new Error('Calculation service unavailable');
+        console.error('Rules fetching error:', error);
+        throw new Error('Rules service unavailable');
     }
 };

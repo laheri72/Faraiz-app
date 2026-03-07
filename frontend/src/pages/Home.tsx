@@ -1,12 +1,13 @@
 import React from 'react';
-import { Play, History } from 'lucide-react';
+import { Play, History, BookOpen } from 'lucide-react';
 
 interface Props {
     onStart: () => void;
     onViewHistory: () => void;
+    onViewRuleBook: () => void;
 }
 
-const Home: React.FC<Props> = ({ onStart, onViewHistory }) => {
+const Home: React.FC<Props> = ({ onStart, onViewHistory, onViewRuleBook }) => {
     return (
         <div className="home-hero">
             <h1 className="serif">An Expert System for Fatemi Jurisprudence</h1>
@@ -15,9 +16,12 @@ const Home: React.FC<Props> = ({ onStart, onViewHistory }) => {
                 calculations based on the established jurisprudence of the Fatemi school of thought. 
                 Navigate through the structured steps to determine legal shares with absolute clarity.
             </p>
-            <div className="flex gap-4 justify-center mt-6">
+            <div className="flex flex-wrap gap-4 justify-center mt-6">
                 <button className="btn-primary flex items-center gap-2" onClick={onStart}>
                     <Play size={18} /> Begin Calculation
+                </button>
+                <button className="btn-outline flex items-center gap-2" onClick={onViewRuleBook}>
+                    <BookOpen size={18} /> Rule Book
                 </button>
                 <button className="btn-outline flex items-center gap-2" onClick={onViewHistory}>
                     <History size={18} /> View History

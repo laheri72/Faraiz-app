@@ -70,6 +70,7 @@ const EstateForm: React.FC<Props> = ({ initialData, onNext, onBack }) => {
                         placeholder="Enter total amount (e.g., 240000)" 
                         value={value}
                         onChange={(e) => setValue(e.target.value)}
+                        onWheel={(e) => e.currentTarget.blur()}
                     />
                     <AmountPreview value={value} currency={currency} />
                 </div>
@@ -83,6 +84,7 @@ const EstateForm: React.FC<Props> = ({ initialData, onNext, onBack }) => {
                         placeholder="Enter debts (e.g., 10000)" 
                         value={debts}
                         onChange={(e) => setDebts(e.target.value)}
+                        onWheel={(e) => e.currentTarget.blur()}
                         style={{ borderColor: isDebtOverLimit ? 'var(--error)' : 'var(--border)' }}
                     />
                     {isDebtOverLimit && (
@@ -102,6 +104,7 @@ const EstateForm: React.FC<Props> = ({ initialData, onNext, onBack }) => {
                         placeholder="Enter will amount (e.g., 20000)" 
                         value={wasiyyah}
                         onChange={(e) => setWasiyyah(e.target.value)}
+                        onWheel={(e) => e.currentTarget.blur()}
                         style={{ borderColor: isWasiyyahOverLimit ? 'var(--error)' : 'var(--border)' }}
                     />
                     {isWasiyyahOverLimit && !isDebtOverLimit && (

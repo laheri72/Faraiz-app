@@ -39,7 +39,15 @@ export interface CalculationRequest {
     heirs: HeirInput[];
 }
 
+export interface CalculationStep {
+    title: string;
+    description: string;
+    math_details?: string;
+    items: string[];
+}
+
 export interface CalculationResponse {
     results: CalculationResult[];
     verification: VerificationData;
+    calculation_steps: CalculationStep[];
 }

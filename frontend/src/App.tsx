@@ -5,13 +5,14 @@ import EstateForm from './pages/EstateForm';
 import CaseSummary from './pages/CaseSummary';
 import ResultsDisplay from './pages/ResultsDisplay';
 import HistoryPage from './pages/HistoryPage';
+import RuleBook from './pages/RuleBook';
 import JurisprudenceHeader from './components/JurisprudenceHeader';
 import JurisprudenceFooter from './components/JurisprudenceFooter';
-import { calculateInheritance } from './api/client';
-import type { HeirInput, CalculationResult, VerificationData } from './types';
+import { calculateInheritance, getRules } from './api/client';
+import type { HeirInput, CalculationResult, VerificationData, CalculationStep } from './types';
 import './styles/App.css';
 
-type Step = 'HOME' | 'ESTATE' | 'HEIRS' | 'SUMMARY' | 'RESULTS' | 'LOADING' | 'HISTORY';
+type Step = 'HOME' | 'ESTATE' | 'HEIRS' | 'SUMMARY' | 'RESULTS' | 'LOADING' | 'HISTORY' | 'RULEBOOK';
 
 interface SavedCase {
   id: string;
@@ -19,6 +20,7 @@ interface SavedCase {
   estate: { value: number; debts: number; wasiyyah: number };
   heirs: HeirInput[];
   results: CalculationResult[];
+  calculation_steps?: CalculationStep[];
 }
 
 interface CaseState {
@@ -26,9 +28,11 @@ interface CaseState {
   estate: { value: number; debts: number; wasiyyah: number };
   heirs: HeirInput[];
   results: CalculationResult[];
+  calculation_steps: CalculationStep[];
   verification: VerificationData | null;
   error: string | null;
   history: SavedCase[];
+  engineRules: any[];
 }
 
 const INITIAL_STATE: CaseState = {
@@ -36,17 +40,23 @@ const INITIAL_STATE: CaseState = {
   estate: { value: 0, debts: 0, wasiyyah: 0 },
   heirs: [],
   results: [],
+  calculation_steps: [],
   verification: null,
   error: null,
-  history: []
+  history: [],
+  engineRules: []
 };
 
 const App: React.FC = () => {
   const [state, setState] = useState<CaseState>(() => {
     const saved = localStorage.getItem('fatemi_wirasat_case');
     if (saved) {
-        const parsed = JSON.parse(saved);
-        return { ...INITIAL_STATE, ...parsed };
+      const parsed = JSON.parse(saved);
+      return { 
+        ...INITIAL_STATE, 
+        ...parsed,
+        engineRules: parsed.engineRules || [] // Ensure it exists
+      };
     }
     return INITIAL_STATE;
   });
@@ -61,26 +71,27 @@ const App: React.FC = () => {
   };
 
   const handleEstateSubmit = (value: number, debts: number, wasiyyah: number) => {
-    updateState({ 
-        estate: { value, debts, wasiyyah },
-        step: 'HEIRS' 
+    updateState({
+      estate: { value, debts, wasiyyah },
+      step: 'HEIRS'
     });
   };
 
   const handleHeirsSubmit = (selectedHeirs: HeirInput[]) => {
-    updateState({ 
-        heirs: selectedHeirs,
-        step: 'SUMMARY' 
+    updateState({
+      heirs: selectedHeirs,
+      step: 'SUMMARY'
     });
   };
 
-  const saveToHistory = (results: CalculationResult[]) => {
+  const saveToHistory = (results: CalculationResult[], steps: CalculationStep[]) => {
     const newCase: SavedCase = {
-        id: Math.random().toString(36).substr(2, 9),
-        timestamp: Date.now(),
-        estate: state.estate,
-        heirs: state.heirs,
-        results: results
+      id: Math.random().toString(36).substr(2, 9),
+      timestamp: Date.now(),
+      estate: state.estate,
+      heirs: state.heirs,
+      results: results,
+      calculation_steps: steps
     };
     updateState({ history: [newCase, ...state.history] });
   };
@@ -94,15 +105,16 @@ const App: React.FC = () => {
         wasiyyah: state.estate.wasiyyah,
         heirs: state.heirs
       });
-      
+
       if (!response || !response.results) {
         throw new Error('Invalid response received from server.');
       }
 
-      saveToHistory(response.results);
+      saveToHistory(response.results, response.calculation_steps || []);
 
       updateState({
         results: response.results,
+        calculation_steps: response.calculation_steps || [],
         verification: response.verification || null,
         step: 'RESULTS'
       });
@@ -113,24 +125,35 @@ const App: React.FC = () => {
     }
   };
 
+  const fetchRules = async () => {
+    updateState({ step: 'LOADING', error: null });
+    try {
+        const rules = await getRules();
+        updateState({ engineRules: rules, step: 'RULEBOOK' });
+    } catch (err: any) {
+        updateState({ error: err.message, step: 'HOME' });
+    }
+  };
+
   const loadFromHistory = (saved: SavedCase) => {
     updateState({
-        estate: saved.estate,
-        heirs: saved.heirs,
-        results: saved.results,
-        step: 'RESULTS',
-        verification: null
+      estate: saved.estate,
+      heirs: saved.heirs,
+      results: saved.results,
+      calculation_steps: saved.calculation_steps || [],
+      step: 'RESULTS',
+      verification: null
     });
   };
 
   const reset = () => {
     updateState({
-        step: 'HOME',
-        estate: { value: 0, debts: 0, wasiyyah: 0 },
-        heirs: [],
-        results: [],
-        verification: null,
-        error: null
+      step: 'HOME',
+      estate: { value: 0, debts: 0, wasiyyah: 0 },
+      heirs: [],
+      results: [],
+      verification: null,
+      error: null
     });
   };
 
@@ -148,8 +171,8 @@ const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      <JurisprudenceHeader 
-        step={getStepNumber()} 
+      <JurisprudenceHeader
+        step={getStepNumber()}
         onHome={() => updateState({ step: 'HOME' })}
         onHistory={() => updateState({ step: 'HISTORY' })}
       />
@@ -159,17 +182,25 @@ const App: React.FC = () => {
           {state.error}
         </div>
       )}
-      
+
       <main className="container animate-fade">
         {state.step === 'HOME' && (
           <Home 
             onStart={() => updateState({ step: 'ESTATE' })} 
             onViewHistory={() => updateState({ step: 'HISTORY' })}
+            onViewRuleBook={fetchRules}
           />
         )}
-        
+
+        {state.step === 'RULEBOOK' && (
+          <RuleBook 
+            rules={state.engineRules}
+            onBack={() => updateState({ step: 'HOME' })}
+            onStartCalculation={() => updateState({ step: 'ESTATE' })}
+          />
+        )}
         {state.step === 'HISTORY' && (
-          <HistoryPage 
+          <HistoryPage
             history={state.history}
             onSelect={loadFromHistory}
             onDelete={(id) => updateState({ history: state.history.filter(h => h.id !== id) })}
@@ -178,29 +209,29 @@ const App: React.FC = () => {
         )}
 
         {state.step === 'ESTATE' && (
-          <EstateForm 
+          <EstateForm
             initialData={state.estate}
-            onNext={handleEstateSubmit} 
+            onNext={handleEstateSubmit}
             onBack={() => updateState({ step: 'HOME' })}
           />
         )}
 
         {state.step === 'HEIRS' && (
-          <HeirSelector 
+          <HeirSelector
             currentHeirs={state.heirs}
             onBack={() => updateState({ step: 'ESTATE' })}
-            onHeirChange={handleHeirsSubmit} 
+            onHeirChange={handleHeirsSubmit}
           />
         )}
 
         {state.step === 'SUMMARY' && (
-          <CaseSummary 
+          <CaseSummary
             caseState={{ estate: state.estate, heirs: state.heirs }}
             onBack={() => updateState({ step: 'HEIRS' })}
             onCalculate={handleCalculate}
           />
         )}
-        
+
         {state.step === 'LOADING' && (
           <div className="text-center" style={{ padding: '4rem 0' }}>
             <h2 className="serif">Processing Jurisprudence...</h2>
@@ -208,12 +239,13 @@ const App: React.FC = () => {
             <div className="loader mt-4" style={{ fontSize: '2rem' }}>⏳</div>
           </div>
         )}
-        
+
         {state.step === 'RESULTS' && (
-          <ResultsDisplay 
-            results={state.results} 
+          <ResultsDisplay
+            results={state.results}
+            calculation_steps={state.calculation_steps}
             verification={state.verification}
-            onBack={reset} 
+            onBack={reset}
           />
         )}
       </main>

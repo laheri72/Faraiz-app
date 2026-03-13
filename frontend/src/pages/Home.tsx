@@ -37,8 +37,11 @@ const Home: React.FC<Props> = ({ onStart, onViewHistory, onViewRuleBook }) => {
                 <button className="btn-primary flex items-center gap-2" onClick={onStart}>
                     <Play size={18} /> Begin Calculation
                 </button>
-                <button className="btn-outline flex items-center gap-2" onClick={onViewRuleBook}>
-                    <BookOpen size={18} /> Rule Book
+                <button className="btn-outline flex items-center gap-2" onClick={onViewRuleBook} style={{ display: 'flex', flexDirection: 'column', padding: '0.4rem 1rem' }}>
+                    <div className="flex items-center gap-2">
+                        <BookOpen size={18} />
+                        <span style={{ fontFamily: "'Amiri', serif", fontSize: '1.2rem', marginBottom: '-0.2rem' }}>أحكام الفرائض</span>
+                    </div>
                 </button>
                 <button className="btn-outline flex items-center gap-2" onClick={onViewHistory}>
                     <History size={18} /> View History

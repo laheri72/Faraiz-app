@@ -63,12 +63,17 @@ const ResultsDisplay: React.FC<Props> = ({ results, calculation_steps, verificat
             <ResultsLedger results={results} verification={verification} />
             
             <div className="printable-area">
-                <div className="page-statement no-print">
-                    <h2 className="serif">
-                        <ShieldCheck size={22} color="var(--primary)" style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-                        Final Distribution Decree
+                <div className="page-statement no-print" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', marginBottom: '1.5rem' }}>
+                    <h2 className="serif mb-0" style={{ fontFamily: "'Amiri', serif", fontSize: '1.7rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }} dir="rtl">
+                        <ShieldCheck size={26} color="var(--primary)" />
+                        الموجب الشرعي النهائي
                     </h2>
-                    <p>The distribution below is based on the deterministic application of Fatemi Fiqh rules.</p>
+                    <h3 className="serif text-primary" style={{ fontSize: '1.1rem', margin: 0, opacity: 0.9 }}>
+                        Final Distribution Decree
+                    </h3>
+                    <p style={{ textAlign: 'center', opacity: 0.8, fontSize: '0.9rem', marginTop: '0.3rem' }}>
+                        The distribution below is based on the deterministic application of Fatemi Fiqh rules.
+                    </p>
                 </div>
 
                 <div className="flex gap-2 mb-4 justify-end no-print">
@@ -85,8 +90,9 @@ const ResultsDisplay: React.FC<Props> = ({ results, calculation_steps, verificat
                     
                     <SummaryOverview results={results} />
 
-                    <div className="section-title serif mt-4" style={{ marginBottom: '1.5rem' }}>
-                        Full Distribution Breakdown
+                    <div className="section-title serif mt-4" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+                        <span style={{ fontFamily: "'Amiri', serif", fontSize: '1.4rem' }} dir="rtl">تفصيل قسمة الفرائض</span>
+                        <span style={{ fontSize: '1rem', opacity: 0.7 }}>Full Distribution Breakdown</span>
                     </div>
 
                     <ResultsTable results={results} />

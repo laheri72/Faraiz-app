@@ -42,14 +42,21 @@ const RuleBook: React.FC<Props> = ({ rules, onBack, onStartCalculation }) => {
                 </button>
             </div>
 
-            <div className="page-statement mb-8">
-                <div className="flex items-center gap-3 mb-2">
+            <div className="page-statement mb-8" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                <div className="flex items-center gap-3 mb-2" style={{ flexDirection: 'row-reverse' }}>
                     <div className="p-2 bg-primary rounded-lg text-white">
                         <BookOpen size={24} />
                     </div>
-                    <h1 className="serif text-2xl sm:text-3xl m-0">Engine Rule Book</h1>
+                    <h1 className="serif mb-0 text-3xl sm:text-4xl" style={{ fontFamily: "'Amiri', serif", margin: 0 }} dir="rtl">
+                        أحكام الفرائض
+                    </h1>
                 </div>
-                <p className="text-base sm:text-lg opacity-80">Fatemi Inheritance Logic (Daʿāʾim al-Islām)</p>
+                <h2 className="serif text-primary" style={{ fontSize: '1.2rem', margin: 0, opacity: 0.9 }}>
+                    Engine Rule Book
+                </h2>
+                <p className="text-center opacity-80" style={{ fontSize: '0.9rem', marginTop: '0.3rem' }}>
+                    Fatemi Inheritance Logic (Daʿāʾim al-Islām)
+                </p>
             </div>
 
             {/* Search and Filter - Stacked on Mobile */}
@@ -140,8 +147,9 @@ const RuleBook: React.FC<Props> = ({ rules, onBack, onStartCalculation }) => {
                         </div>
                     ))
                 ) : (
-                    <div className="p-12 text-center text-muted italic bg-light rounded-xl border-2 border-dashed border-elegant">
-                        No rules match your search.
+                    <div className="p-12 text-center text-muted italic bg-light rounded-xl border-2 border-dashed border-elegant flex flex-col items-center gap-2">
+                        <span style={{ fontFamily: "'Amiri', serif", fontSize: '1.2rem' }}>لا توجد أحكام مطابقة</span>
+                        <span>No rules match your search.</span>
                     </div>
                 )}
             </div>

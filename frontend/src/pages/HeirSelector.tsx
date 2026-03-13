@@ -149,9 +149,16 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
     if (!deceasedGender) {
         return (
             <div className="animate-fade">
-                <div className="page-statement">
-                    <h2 className="serif">Initial Identification</h2>
-                    <p>Please identify the gender of the deceased (Marhum/Marhuma) to determine eligible heirs.</p>
+                <div className="page-statement" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <h2 className="serif mb-0" style={{ fontFamily: "'Amiri', serif", fontSize: '2rem', margin: 0 }} dir="rtl">
+                        تحديد المتوفى
+                    </h2>
+                    <h3 className="serif text-primary" style={{ fontSize: '1.2rem', margin: 0, opacity: 0.9 }}>
+                        Initial Identification
+                    </h3>
+                    <p style={{ textAlign: 'center', opacity: 0.8, fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                        Please identify the gender of the deceased (Marhum/Marhuma) to determine eligible heirs.
+                    </p>
                 </div>
                 <div className="flex gap-2 justify-center mt-4">
                     <button className="btn-outline flex items-center gap-2" onClick={() => setDeceasedGender('M')}>
@@ -167,10 +174,22 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
 
     return (
         <div className="animate-fade">
-            <div className="page-statement" id="heir-selector-top">
-                <h2 className="serif">Step 2: Heir Selection</h2>
-                <p>Define the surviving family members of the deceased <strong>({deceasedGender === 'M' ? 'Marhum' : 'Marhuma'})</strong>.</p>
-                <button className="text-link" style={{ fontSize: '0.85rem', color: 'var(--secondary)' }} onClick={() => {setDeceasedGender(null); setSelectedHeirs([]);}}>Change deceased gender</button>
+            <div className="page-statement" id="heir-selector-top" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem' }}>
+                <h2 className="serif mb-0" style={{ fontFamily: "'Amiri', serif", fontSize: '2rem', margin: 0 }} dir="rtl">
+                    الخطوة ٢: تحديد الورثة
+                </h2>
+                <h3 className="serif text-primary" style={{ fontSize: '1.2rem', margin: 0, opacity: 0.9 }}>
+                    Step 2: Heir Selection
+                </h3>
+                <div style={{ textAlign: 'center', marginTop: '0.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem' }}>
+                    <p style={{ fontFamily: "'Amiri', serif", fontSize: '1.3rem', margin: 0 }} dir="rtl">
+                        حدد الورثة الشرعيين <strong>({deceasedGender === 'M' ? 'للمرحوم' : 'للمرحومة'})</strong>.
+                    </p>
+                    <p style={{ opacity: 0.8, fontSize: '0.85rem', margin: 0 }}>
+                        Define the surviving family members of the deceased <strong>({deceasedGender === 'M' ? 'Marhum' : 'Marhuma'})</strong>.
+                    </p>
+                </div>
+                <button className="text-link" style={{ fontSize: '0.85rem', color: 'var(--secondary)', marginTop: '0.5rem' }} onClick={() => {setDeceasedGender(null); setSelectedHeirs([]);}}>Change deceased gender</button>
             </div>
 
             <div className="heir-selection-grid">

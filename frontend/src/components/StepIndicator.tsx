@@ -8,7 +8,7 @@ const StepIndicator: React.FC<Props> = ({ currentStep }) => {
     const steps = ['Estate', 'Heirs', 'Summary', 'Results'];
     
     return (
-        <div className="step-indicator" style={{ marginTop: '2rem' }}>
+        <div className="step-indicator" style={{ marginTop: '0.5rem' }}>
             {steps.map((label, i) => {
                 const stepNum = i + 1;
                 const isActive = stepNum === currentStep;

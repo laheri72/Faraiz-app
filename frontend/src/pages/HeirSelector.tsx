@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { HeirInput } from '../types';
 import { User } from 'lucide-react';
 import RelationCard from '../components/RelationCard';
@@ -64,6 +65,14 @@ const AVAILABLE_RELATIONS: RelationInfo[] = [
 const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) => {
     const [deceasedGender, setDeceasedGender] = useState<'M' | 'F' | null>(currentHeirs.length > 0 ? (currentHeirs.some(h => h.relation_type === 'Husband') ? 'F' : 'M') : null);
     const [selectedHeirs, setSelectedHeirs] = useState<HeirInput[]>(currentHeirs);
+    const [toast, setToast] = useState<{ relation: string, arabic?: string, count: number, id: number } | null>(null);
+
+    useEffect(() => {
+        if (toast) {
+            const timer = setTimeout(() => setToast(null), 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast]);
 
     useEffect(() => {
         const topElement = document.getElementById('heir-selector-top');
@@ -95,11 +104,16 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
     const handleAdd = (item: RelationInfo) => {
         triggerHaptic();
         const existingIndex = selectedHeirs.findIndex(h => h.relation_type === item.relation_type && h.generation_level === item.generation_level);
+        let currentCount = 1;
+
         if (existingIndex !== -1) {
             const newHeirs = [...selectedHeirs];
             if (newHeirs[existingIndex].count < item.max) {
                 newHeirs[existingIndex].count += 1;
                 setSelectedHeirs(newHeirs);
+                currentCount = newHeirs[existingIndex].count;
+            } else {
+                currentCount = item.max;
             }
         } else {
             setSelectedHeirs([...selectedHeirs, {
@@ -111,6 +125,7 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
                 generation_level: item.generation_level
             }]);
         }
+        setToast({ relation: item.relation, arabic: item.arabic, count: currentCount, id: Date.now() });
     };
 
     const handleRemove = (relType: string, genLevel: number) => {
@@ -118,11 +133,17 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
         const existingIndex = selectedHeirs.findIndex(h => h.relation_type === relType && h.generation_level === genLevel);
         if (existingIndex !== -1) {
             const newHeirs = [...selectedHeirs];
+            let currentCount = 0;
             if (newHeirs[existingIndex].count > 1) {
                 newHeirs[existingIndex].count -= 1;
                 setSelectedHeirs(newHeirs);
+                currentCount = newHeirs[existingIndex].count;
             } else {
                 setSelectedHeirs(newHeirs.filter((_, idx) => idx !== existingIndex));
+            }
+            const item = AVAILABLE_RELATIONS.find(r => r.relation_type === relType && r.generation_level === genLevel);
+            if (item) {
+                setToast({ relation: item.relation, arabic: item.arabic, count: currentCount, id: Date.now() });
             }
         }
     };
@@ -232,6 +253,48 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
                     Next: Case Summary
                 </button>
             </div>
+
+            {toast && createPortal(
+                <div 
+                    key={toast.id}
+                    className="toast-fade"
+                    style={{ 
+                        position: 'fixed',
+                        bottom: '5.5rem',
+                        left: 0,
+                        right: 0,
+                        marginLeft: 'auto',
+                        marginRight: 'auto',
+                        width: 'max-content',
+                        maxWidth: '90%',
+                        backgroundColor: 'var(--text-main)',
+                        color: 'white',
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '9999px',
+                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3)',
+                        zIndex: 9999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        pointerEvents: 'none',
+                        border: '1px solid var(--gold)',
+                        animation: 'fadeIn 0.2s ease-out forwards'
+                    }}
+                >
+                    <div className="flex items-center gap-3">
+                        <span className="font-bold text-gold text-lg">{toast.count}</span>
+                        <span className="text-sm opacity-90">x</span>
+                        <span className="text-sm font-medium">{toast.relation}</span>
+                        {toast.arabic && (
+                            <>
+                                <span className="opacity-50 mx-1">|</span>
+                                <span style={{ fontFamily: "'Amiri', serif", fontSize: '1.2rem', color: 'var(--gold)', marginBottom: '-0.3rem' }} dir="rtl">{toast.arabic}</span>
+                            </>
+                        )}
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 };

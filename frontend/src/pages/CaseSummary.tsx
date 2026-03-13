@@ -31,9 +31,16 @@ const CaseSummary: React.FC<Props> = ({ caseState, onBack, onCalculate }) => {
 
     return (
         <div className="animate-fade" ref={summaryRef}>
-            <div className="page-statement">
-                <h2 className="serif">Step 3: Case Summary</h2>
-                <p>Please verify the case details below before initiating the formal jurisprudence calculation.</p>
+            <div className="page-statement" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', marginBottom: '1.5rem' }}>
+                <h2 className="serif mb-0" style={{ fontFamily: "'Amiri', serif", fontSize: '1.7rem', margin: 0 }} dir="rtl">
+                    الخطوة ٣: خلاصة القضية
+                </h2>
+                <h3 className="serif text-primary" style={{ fontSize: '1.1rem', margin: 0, opacity: 0.9 }}>
+                    Step 3: Case Summary
+                </h3>
+                <p style={{ textAlign: 'center', opacity: 0.8, fontSize: '0.9rem', marginTop: '0.3rem' }}>
+                    Please verify the case details below before initiating the formal jurisprudence calculation (Hisab).
+                </p>
             </div>
 
             {/* Visual Distributable Bar */}
@@ -73,11 +80,11 @@ const CaseSummary: React.FC<Props> = ({ caseState, onBack, onCalculate }) => {
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         <div className="flex justify-between">
-                            <span className="text-muted">Total Estate:</span>
+                            <span className="text-muted">Tarikah (Estate):</span>
                             <span style={{ fontWeight: '700' }}>{estate.value.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-muted">Total Debts:</span>
+                            <span className="text-muted">Dayn (Debts):</span>
                             <span style={{ color: 'var(--error)' }}>- {estate.debts.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
@@ -94,7 +101,7 @@ const CaseSummary: React.FC<Props> = ({ caseState, onBack, onCalculate }) => {
 
                 <div style={{ background: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', border: '1px solid var(--border-elegant)' }}>
                     <h3 className="serif flex items-center gap-2" style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>
-                        <Users size={18} /> Surviving Heirs
+                        <Users size={18} /> Surviving Heirs (Waratha)
                     </h3>
                     <ul style={{ paddingLeft: '1.2rem', margin: 0 }}>
                         {heirs.map((h, i) => (
@@ -119,7 +126,7 @@ const CaseSummary: React.FC<Props> = ({ caseState, onBack, onCalculate }) => {
                     className="btn-primary flex items-center gap-2" 
                     onClick={onCalculate}
                 >
-                    <ClipboardCheck size={18} /> Run Engine
+                    <ClipboardCheck size={18} /> Run Hisab
                 </button>
             </div>
         </div>

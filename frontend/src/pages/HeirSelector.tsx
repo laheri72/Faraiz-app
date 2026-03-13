@@ -45,7 +45,7 @@ const AVAILABLE_RELATIONS: RelationInfo[] = [
     // --- SIBLINGS (PATERNAL/FULL) ---
     { relation: 'Brother', arabic: 'الأخ', relation_type: 'Brother', lineage: 'paternal', gender: 'M', max: 20, category: 'Siblings', generation_level: 1 },
     { relation: 'Sister', arabic: 'الأخت', relation_type: 'Sister', lineage: 'paternal', gender: 'F', max: 20, category: 'Siblings', generation_level: 1 },
-    
+
     // --- SIBLINGS (MATERNAL) ---
     { relation: 'Maternal Brother', arabic: 'الأخ للأم', relation_type: 'Brother_Maternal', lineage: 'maternal', gender: 'M', max: 20, category: 'Maternal Sibs', generation_level: 1 },
     { relation: 'Maternal Sister', arabic: 'الأخت للأم', relation_type: 'Sister_Maternal', lineage: 'maternal', gender: 'F', max: 20, category: 'Maternal Sibs', generation_level: 1 },
@@ -102,11 +102,11 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
                 setSelectedHeirs(newHeirs);
             }
         } else {
-            setSelectedHeirs([...selectedHeirs, { 
-                relation: item.relation, 
+            setSelectedHeirs([...selectedHeirs, {
+                relation: item.relation,
                 relation_type: item.relation_type,
                 lineage: item.lineage,
-                gender: item.gender, 
+                gender: item.gender,
                 count: 1,
                 generation_level: item.generation_level
             }]);
@@ -182,14 +182,11 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
                     Step 2: Heir Selection
                 </h3>
                 <div style={{ textAlign: 'center', marginTop: '0.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem' }}>
-                    <p style={{ fontFamily: "'Amiri', serif", fontSize: '1.3rem', margin: 0 }} dir="rtl">
-                        حدد الورثة الشرعيين <strong>({deceasedGender === 'M' ? 'للمرحوم' : 'للمرحومة'})</strong>.
-                    </p>
                     <p style={{ opacity: 0.8, fontSize: '0.85rem', margin: 0 }}>
                         Define the surviving family members of the deceased <strong>({deceasedGender === 'M' ? 'Marhum' : 'Marhuma'})</strong>.
                     </p>
                 </div>
-                <button className="text-link" style={{ fontSize: '0.85rem', color: 'var(--secondary)', marginTop: '0.5rem' }} onClick={() => {setDeceasedGender(null); setSelectedHeirs([]);}}>Change deceased gender</button>
+                <button className="text-link" style={{ fontSize: '0.85rem', color: 'var(--secondary)', marginTop: '0.5rem' }} onClick={() => { setDeceasedGender(null); setSelectedHeirs([]); }}>Change deceased gender</button>
             </div>
 
             <div className="heir-selection-grid">
@@ -202,7 +199,7 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
                                     {filteredRelations.filter(r => r.category === cat).map(item => {
                                         const selected = selectedHeirs.find(h => h.relation_type === item.relation_type && h.generation_level === item.generation_level);
                                         return (
-                                            <RelationCard 
+                                            <RelationCard
                                                 key={`${item.relation_type}_${item.generation_level}`}
                                                 relation={item.relation}
                                                 arabic={item.arabic}
@@ -220,8 +217,8 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
                 </div>
 
                 <div className="audit-sidebar">
-                    <SelectionAudit 
-                        heirs={selectedHeirs} 
+                    <SelectionAudit
+                        heirs={selectedHeirs}
                         onAdd={handleAuditAdd}
                         onRemove={handleRemove}
                         onClear={handleClear}

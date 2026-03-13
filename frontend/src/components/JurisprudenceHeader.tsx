@@ -13,8 +13,8 @@ const JurisprudenceHeader: React.FC<Props> = ({ step, onHome, onHistory }) => {
         <header className="jurisprudence-header no-print" style={{ borderBottom: '1px solid var(--border-elegant)', paddingBottom: '1.5rem', marginBottom: '2rem' }}>
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                    <button 
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors border border-transparent hover:border-gray-200" 
+                    <button
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors border border-transparent hover:border-gray-200"
                         onClick={onHome}
                         title="Dashboard Home"
                     >
@@ -22,13 +22,13 @@ const JurisprudenceHeader: React.FC<Props> = ({ step, onHome, onHistory }) => {
                     </button>
                     <div>
                         <h1 className="serif" style={{ margin: 0, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>Fatemi Wirasat Engine</h1>
-                        <p className="subtitle" style={{ margin: 0, fontSize: '0.8rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Deterministic Jurisprudence System</p>
+                        <p className="subtitle" style={{ margin: 0, fontSize: '1.1rem', opacity: 0.8, fontFamily: "'Amiri', serif" }}>مستبصرا من كتب الفقه الفاطمي</p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <button 
-                        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 text-sm font-medium" 
+                    <button
+                        className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 text-sm font-medium"
                         onClick={onHistory}
                     >
                         <Clock size={18} color="var(--primary)" />

@@ -17,6 +17,7 @@ type Step = 'HOME' | 'ESTATE' | 'HEIRS' | 'SUMMARY' | 'RESULTS' | 'LOADING' | 'H
 interface SavedCase {
   id: string;
   timestamp: number;
+  currency?: string;
   estate: { value: number; debts: number; wasiyyah: number };
   heirs: HeirInput[];
   results: CalculationResult[];
@@ -25,6 +26,7 @@ interface SavedCase {
 
 interface CaseState {
   step: Step;
+  currency: string;
   estate: { value: number; debts: number; wasiyyah: number };
   heirs: HeirInput[];
   results: CalculationResult[];
@@ -37,6 +39,7 @@ interface CaseState {
 
 const INITIAL_STATE: CaseState = {
   step: 'HOME',
+  currency: '₹',
   estate: { value: 0, debts: 0, wasiyyah: 0 },
   heirs: [],
   results: [],
@@ -70,9 +73,10 @@ const App: React.FC = () => {
     setState(prev => ({ ...prev, ...updates }));
   };
 
-  const handleEstateSubmit = (value: number, debts: number, wasiyyah: number) => {
+  const handleEstateSubmit = (value: number, debts: number, wasiyyah: number, currency: string) => {
     updateState({
       estate: { value, debts, wasiyyah },
+      currency,
       step: 'HEIRS'
     });
   };
@@ -88,6 +92,7 @@ const App: React.FC = () => {
     const newCase: SavedCase = {
       id: Math.random().toString(36).substr(2, 9),
       timestamp: Date.now(),
+      currency: state.currency,
       estate: state.estate,
       heirs: state.heirs,
       results: results,
@@ -137,6 +142,7 @@ const App: React.FC = () => {
 
   const loadFromHistory = (saved: SavedCase) => {
     updateState({
+      currency: saved.currency || '₹',
       estate: saved.estate,
       heirs: saved.heirs,
       results: saved.results,
@@ -149,6 +155,7 @@ const App: React.FC = () => {
   const reset = () => {
     updateState({
       step: 'HOME',
+      currency: '₹',
       estate: { value: 0, debts: 0, wasiyyah: 0 },
       heirs: [],
       results: [],
@@ -211,6 +218,7 @@ const App: React.FC = () => {
         {state.step === 'ESTATE' && (
           <EstateForm
             initialData={state.estate}
+            initialCurrency={state.currency}
             onNext={handleEstateSubmit}
             onBack={() => updateState({ step: 'HOME' })}
           />
@@ -226,7 +234,7 @@ const App: React.FC = () => {
 
         {state.step === 'SUMMARY' && (
           <CaseSummary
-            caseState={{ estate: state.estate, heirs: state.heirs }}
+            caseState={{ estate: state.estate, heirs: state.heirs, currency: state.currency }}
             onBack={() => updateState({ step: 'HEIRS' })}
             onCalculate={handleCalculate}
           />
@@ -245,6 +253,7 @@ const App: React.FC = () => {
             results={state.results}
             calculation_steps={state.calculation_steps}
             verification={state.verification}
+            currency={state.currency}
             onBack={reset}
           />
         )}

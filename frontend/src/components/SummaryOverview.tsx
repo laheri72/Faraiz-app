@@ -4,9 +4,10 @@ import { User, ShieldOff, ChevronDown } from 'lucide-react';
 
 interface Props {
     results: CalculationResult[];
+    currency?: string;
 }
 
-const SummaryOverview: React.FC<Props> = ({ results }) => {
+const SummaryOverview: React.FC<Props> = ({ results, currency = 'Units' }) => {
     const scrollToDetail = (id: string) => {
         const element = document.getElementById(`detail-${id}`);
         if (element) {
@@ -37,7 +38,7 @@ const SummaryOverview: React.FC<Props> = ({ results }) => {
                         {!res.is_blocked ? (
                             <div className="amount-display" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 <div>
-                                    <span className="currency">Units </span>
+                                    <span className="currency">{currency} </span>
                                     <span className="value">{res.amount.toLocaleString()}</span>
                                 </div>
                                 <div style={{ 

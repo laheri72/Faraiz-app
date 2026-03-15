@@ -5,6 +5,7 @@ import { formatCurrencyIndian } from '../api/utils';
 interface SavedCase {
   id: string;
   timestamp: number;
+  currency?: string;
   estate: { value: number; debts: number; wasiyyah: number };
   heirs: any[];
   results: any[];
@@ -58,7 +59,7 @@ const HistoryPage: React.FC<Props> = ({ history, onSelect, onDelete, onBack }) =
                   {new Date(item.timestamp).toLocaleString()}
                 </div>
                 <div style={{ fontWeight: '700', fontSize: '1.1rem', color: 'var(--primary)' }}>
-                  Net Estate: ₹ {formatCurrencyIndian(item.estate.value - item.estate.debts - item.estate.wasiyyah)}
+                  Net Estate: {item.currency || '₹'} {formatCurrencyIndian(item.estate.value - item.estate.debts - item.estate.wasiyyah)}
                 </div>
                 <div style={{ fontSize: '0.9rem', color: 'var(--secondary)' }}>
                   {item.heirs.length} Heir(s) identified

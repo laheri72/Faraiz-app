@@ -5,6 +5,7 @@ import { Landmark, Users, ClipboardCheck } from 'lucide-react';
 interface CaseState {
     estate: { value: number, debts: number, wasiyyah: number };
     heirs: HeirInput[];
+    currency?: string;
 }
 
 interface Props {
@@ -14,7 +15,7 @@ interface Props {
 }
 
 const CaseSummary: React.FC<Props> = ({ caseState, onBack, onCalculate }) => {
-    const { estate, heirs } = caseState;
+    const { estate, heirs, currency = '₹' } = caseState;
     const netEstate = estate.value - estate.debts - estate.wasiyyah;
     const summaryRef = useRef<HTMLDivElement>(null);
     
@@ -81,20 +82,20 @@ const CaseSummary: React.FC<Props> = ({ caseState, onBack, onCalculate }) => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         <div className="flex justify-between">
                             <span className="text-muted">Tarikah (Estate):</span>
-                            <span style={{ fontWeight: '700' }}>{estate.value.toLocaleString()}</span>
+                            <span style={{ fontWeight: '700' }}>{currency} {estate.value.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted">Dayn (Debts):</span>
-                            <span style={{ color: 'var(--error)' }}>- {estate.debts.toLocaleString()}</span>
+                            <span style={{ color: 'var(--error)' }}>- {currency} {estate.debts.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-muted">Wasiyyah:</span>
-                            <span style={{ color: 'var(--error)' }}>- {estate.wasiyyah.toLocaleString()}</span>
+                            <span style={{ color: 'var(--error)' }}>- {currency} {estate.wasiyyah.toLocaleString()}</span>
                         </div>
                         <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '0.5rem 0' }} />
                         <div className="flex justify-between" style={{ fontSize: '1.1rem' }}>
                             <span style={{ fontWeight: '700' }}>Net Distributable:</span>
-                            <span style={{ fontWeight: '800', color: 'var(--primary)' }}>{netEstate.toLocaleString()}</span>
+                            <span style={{ fontWeight: '800', color: 'var(--primary)' }}>{currency} {netEstate.toLocaleString()}</span>
                         </div>
                     </div>
                 </div>

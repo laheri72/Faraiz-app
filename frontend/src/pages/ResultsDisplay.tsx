@@ -11,10 +11,11 @@ interface Props {
     results: CalculationResult[];
     calculation_steps: CalculationStep[];
     verification: VerificationData | null;
+    currency?: string;
     onBack: () => void;
 }
 
-const ResultsDisplay: React.FC<Props> = ({ results, calculation_steps, verification, onBack }) => {
+const ResultsDisplay: React.FC<Props> = ({ results, calculation_steps, verification, currency = '₹', onBack }) => {
     const handlePrint = () => {
         window.print();
     };
@@ -86,7 +87,7 @@ const ResultsDisplay: React.FC<Props> = ({ results, calculation_steps, verificat
                 </div>
 
                 <div className="no-print">
-                    <SummaryOverview results={results} />
+                    <SummaryOverview results={results} currency={currency} />
                     
                     <MathDistributionCard steps={calculation_steps} />
 

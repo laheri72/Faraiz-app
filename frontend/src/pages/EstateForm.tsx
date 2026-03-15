@@ -3,7 +3,8 @@ import { formatCurrencyIndian, numberToWords } from '../api/utils';
 
 interface Props {
     initialData: { value: number, debts: number, wasiyyah: number };
-    onNext: (value: number, debts: number, wasiyyah: number) => void;
+    initialCurrency?: string;
+    onNext: (value: number, debts: number, wasiyyah: number, currency: string) => void;
     onBack: () => void;
 }
 
@@ -20,11 +21,11 @@ const AmountPreview: React.FC<{ value: string, currency: string }> = ({ value, c
     );
 };
 
-const EstateForm: React.FC<Props> = ({ initialData, onNext, onBack }) => {
+const EstateForm: React.FC<Props> = ({ initialData, initialCurrency, onNext, onBack }) => {
     const [value, setValue] = useState<string>(initialData.value ? initialData.value.toString() : '');
     const [debts, setDebts] = useState<string>(initialData.debts ? initialData.debts.toString() : '');
     const [wasiyyah, setWasiyyah] = useState<string>(initialData.wasiyyah ? initialData.wasiyyah.toString() : '');
-    const [currency, setCurrency] = useState<string>('₹');
+    const [currency, setCurrency] = useState<string>(initialCurrency || '₹');
 
     const estateNum = parseFloat(value) || 0;
     const debtNum = parseFloat(debts || '0') || 0;
@@ -137,7 +138,7 @@ const EstateForm: React.FC<Props> = ({ initialData, onNext, onBack }) => {
                 <button
                     className="btn-primary"
                     disabled={!value || parseFloat(value) <= 0 || isWasiyyahOverLimit || isDebtOverLimit}
-                    onClick={() => onNext(parseFloat(value), parseFloat(debts || '0'), parseFloat(wasiyyah || '0'))}
+                    onClick={() => onNext(parseFloat(value), parseFloat(debts || '0'), parseFloat(wasiyyah || '0'), currency)}
                 >
                     Next: Define Heirs
                 </button>

@@ -376,6 +376,12 @@ class InferenceEngine:
         return all(results) if results else False
 
     def fire_rule(self, rule: Rule):
+        def add_rule_to_target(tgt: str):
+            if tgt not in self.state.heir_applied_rules:
+                self.state.heir_applied_rules[tgt] = []
+            if rule.rule_id not in self.state.heir_applied_rules[tgt]:
+                self.state.heir_applied_rules[tgt].append(rule.rule_id)
+
         for action in rule.actions:
             if action.type == "set_mode": self.state.active_mode = action.value
             elif action.type == "procedure_action":
@@ -388,6 +394,7 @@ class InferenceEngine:
             elif action.type == "blocking":
                 self.state.excluded_relations.add(action.target)
                 self.state.blocking_map[action.target] = BlockingDetail(blocked=True, blocked_by="Rule", blocking_rule=rule.rule_id, arabic_text=rule.arabic_text)
+                add_rule_to_target(action.target)
             elif action.type == "blocking_distant_descendants":
                 desc_types = ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"]
                 active_descendants = [h for h in self.state.valid_heirs if h.relation_type in desc_types and h.relation_type not in self.state.excluded_relations]
@@ -397,6 +404,7 @@ class InferenceEngine:
                     if h.generation_level > min_gen:
                         self.state.excluded_relations.add(h.relation_type)
                         self.state.blocking_map[h.relation_type] = BlockingDetail(blocked=True, blocked_by="Closer Descendant", blocking_rule=rule.rule_id, arabic_text=rule.arabic_text)
+                        add_rule_to_target(h.relation_type)
             elif action.type == "blocking_distant_class3":
                 c3_types = ["Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Daughter_of_Son_of_Brother"]
                 active_c3 = [h for h in self.state.valid_heirs if h.relation_type in c3_types and h.relation_type not in self.state.excluded_relations]
@@ -406,12 +414,15 @@ class InferenceEngine:
                     if h.generation_level > min_gen:
                         self.state.excluded_relations.add(h.relation_type)
                         self.state.blocking_map[h.relation_type] = BlockingDetail(blocked=True, blocked_by="Proximity", blocking_rule=rule.rule_id, arabic_text=rule.arabic_text)
+                        add_rule_to_target(h.relation_type)
             elif action.type in ["assign_fraction", "set_radd_eligible"]:
                 if action.type == "assign_fraction": self.state.assigned_fractions[action.target] = Fraction(action.value)
                 if action.radd_eligible: self.state.radd_pool.add(action.target)
+                if action.target: add_rule_to_target(action.target)
             elif action.type == "assign_remainder":
                 self.state.remainder_sink = action.target
                 if action.radd_eligible: self.state.radd_pool.add(action.target)
+                if action.target: add_rule_to_target(action.target)
         if rule.slot: self.state.occupied_slots.add(rule.slot)
         self.state.fired_rules.append(rule.rule_id)
 
@@ -529,6 +540,25 @@ class MathEngine:
 
         steps.append(CalculationStep(title="3. MATHEMATICAL DISTRIBUTION", description="Step-by-step computation of shares:", items=math_items))
 
+        # Propagate Pool Rules
+        def propagate_pool_rules(pool_name: str, target_relations: List[str]):
+            if pool_name in state.heir_applied_rules:
+                for r in target_relations:
+                    if r not in state.heir_applied_rules:
+                        state.heir_applied_rules[r] = []
+                    for rid in state.heir_applied_rules[pool_name]:
+                        if rid not in state.heir_applied_rules[r]:
+                            state.heir_applied_rules[r].append(rid)
+
+        propagate_pool_rules("Descendants_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"]])
+        propagate_pool_rules("Siblings_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Brother", "Sister", "grandfather_paternal", "grandmother_paternal", "Son_of_Brother"]])
+        propagate_pool_rules("Maternal_Siblings_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Brother_Maternal", "Sister_Maternal"]])
+        propagate_pool_rules("Paternal_Grandparents_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["grandfather_paternal", "grandmother_paternal"]])
+        propagate_pool_rules("Maternal_Grandparents_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["grandfather_maternal", "grandmother_maternal"]])
+        propagate_pool_rules("Maternal_Uncles_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Maternal_Uncle", "Maternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Son_of_maternal_uncle", "Son_of_aunt"]])
+        propagate_pool_rules("Paternal_Uncles_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Paternal_Uncle", "Paternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Brother", "Daughter_of_Son_of_Brother", "Daughter_of_uncle"]])
+        propagate_pool_rules("Grandmother_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["grandmother_paternal", "grandmother_maternal", "Grandmother"]])
+
         final_ledger = {}
         for rel, total_share in processed_ledger.items():
             if rel == "Descendants_Pool":
@@ -633,10 +663,21 @@ class MathEngine:
         
         final_results = []
         for ir in individual_results:
+            rel_type = ir.heir_id.rsplit('_', 1)[0]
+            my_rules = []
+            
+            if ir.blocking and ir.blocking.blocked:
+                if ir.blocking.blocking_rule:
+                    my_rules.append(ir.blocking.blocking_rule)
+            else:
+                my_rules = state.heir_applied_rules.get(rel_type, []).copy()
+
+            my_arabic_reasoning = [rule.arabic_text for rid in my_rules for rule in KNOWLEDGE_BASE if rule.rule_id == rid]
+
             final_results.append(CalculationResult(
                 heir_id=ir.heir_id, relation=ir.relation, share=str(ir.fraction.limit_denominator()), amount=round(float(ir.amount), 2),
                 share_percentage=float(ir.fraction),
-                rules_used=state.fired_rules, arabic_reasoning=[rule.arabic_text for rid in state.fired_rules for rule in KNOWLEDGE_BASE if rule.rule_id == rid],
+                rules_used=my_rules, arabic_reasoning=my_arabic_reasoning,
                 is_blocked=ir.blocking.blocked if ir.blocking else False, blocked_by=ir.blocking.blocked_by if ir.blocking else None, blocking_rule_id=ir.blocking.blocking_rule if ir.blocking else None
             ))
         

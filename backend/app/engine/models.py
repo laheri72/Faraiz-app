@@ -78,6 +78,7 @@ class CaseState(BaseModel):
     
     # Tracking
     fired_rules: List[str] = []
+    heir_applied_rules: Dict[str, List[str]] = {}
     occupied_slots: Set[str] = set()
     
     class Config:

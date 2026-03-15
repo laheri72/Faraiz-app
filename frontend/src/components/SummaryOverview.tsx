@@ -35,9 +35,23 @@ const SummaryOverview: React.FC<Props> = ({ results }) => {
                         </div>
                         
                         {!res.is_blocked ? (
-                            <div className="amount-display">
-                                <span className="currency">Units</span>
-                                <span className="value">{res.amount.toLocaleString()}</span>
+                            <div className="amount-display" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div>
+                                    <span className="currency">Units </span>
+                                    <span className="value">{res.amount.toLocaleString()}</span>
+                                </div>
+                                <div style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '8px', 
+                                    fontSize: '0.85rem',
+                                    color: 'var(--primary)'
+                                }}>
+                                    <span style={{ fontWeight: 'bold' }}>{((res.share_percentage || 0) * 100).toFixed(2)}%</span>
+                                    <div style={{ flex: 1, height: '4px', backgroundColor: 'var(--border-elegant)', borderRadius: '2px', overflow: 'hidden' }}>
+                                        <div style={{ height: '100%', backgroundColor: 'var(--gold)', width: `${((res.share_percentage || 0) * 100)}%` }} />
+                                    </div>
+                                </div>
                             </div>
                         ) : (
                             <div className="blocked-status">

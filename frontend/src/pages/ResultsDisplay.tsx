@@ -86,9 +86,9 @@ const ResultsDisplay: React.FC<Props> = ({ results, calculation_steps, verificat
                 </div>
 
                 <div className="no-print">
-                    <MathDistributionCard steps={calculation_steps} />
-                    
                     <SummaryOverview results={results} />
+                    
+                    <MathDistributionCard steps={calculation_steps} />
 
                     <div className="section-title serif mt-4" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
                         <span style={{ fontFamily: "'Amiri', serif", fontSize: '1.4rem' }} dir="rtl">تفصيل قسمة الفرائض</span>

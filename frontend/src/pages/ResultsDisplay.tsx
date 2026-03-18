@@ -6,6 +6,7 @@ import VerificationPanel from '../components/VerificationPanel';
 import SummaryOverview from '../components/SummaryOverview';
 import ResultsLedger from '../components/ResultsLedger';
 import MathDistributionCard from '../components/MathDistributionCard';
+import DistributionPieChart from '../components/DistributionPieChart';
 
 interface Props {
     results: CalculationResult[];
@@ -87,6 +88,8 @@ const ResultsDisplay: React.FC<Props> = ({ results, calculation_steps, verificat
                 </div>
 
                 <div className="no-print">
+                    <DistributionPieChart results={results} currency={currency} />
+
                     <SummaryOverview results={results} currency={currency} />
                     
                     <MathDistributionCard steps={calculation_steps} />

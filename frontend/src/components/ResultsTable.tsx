@@ -5,9 +5,10 @@ import { ShieldOff } from 'lucide-react';
 
 interface Props {
     results: CalculationResult[];
+    currency?: string;
 }
 
-const ResultsTable: React.FC<Props> = ({ results }) => {
+const ResultsTable: React.FC<Props> = ({ results, currency = '₹' }) => {
     return (
         <div className="distribution-list">
             {results.map((res, i) => (
@@ -33,7 +34,7 @@ const ResultsTable: React.FC<Props> = ({ results }) => {
                     
                     {!res.is_blocked ? (
                         <div className="amount">
-                            {res.amount.toLocaleString()} <small style={{ fontSize: '0.9rem', fontWeight: 'normal' }}>Units</small>
+                            {currency} {res.amount.toLocaleString()}
                         </div>
                     ) : (
                         <div className="blocking-info" style={{ color: 'var(--error)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>

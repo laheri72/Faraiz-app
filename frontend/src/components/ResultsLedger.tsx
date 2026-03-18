@@ -4,9 +4,10 @@ import type { CalculationResult, VerificationData } from '../types';
 interface Props {
     results: CalculationResult[];
     verification: VerificationData | null;
+    currency?: string;
 }
 
-const ResultsLedger: React.FC<Props> = ({ results, verification }) => {
+const ResultsLedger: React.FC<Props> = ({ results, verification, currency = '₹' }) => {
     const totalDistributed = results.reduce((acc, curr) => acc + curr.amount, 0);
     const isVerified = verification?.status === 'VALID' || verification?.is_balanced;
 
@@ -44,7 +45,7 @@ const ResultsLedger: React.FC<Props> = ({ results, verification }) => {
                                 {res.is_blocked ? 'MAHJUB' : res.share}
                             </td>
                             <td style={{ border: '1px solid black', padding: '0.75rem', textAlign: 'right', fontWeight: 'bold' }}>
-                                {res.amount.toLocaleString()}
+                                {currency} {res.amount.toLocaleString()}
                             </td>
                             <td style={{ border: '1px solid black', padding: '0.75rem', textAlign: 'right', direction: 'rtl', fontFamily: 'Amiri, serif', fontSize: '1.1rem' }}>
                                 {res.arabic_reasoning && res.arabic_reasoning.length > 0 ? res.arabic_reasoning[0] : '-'}
@@ -60,11 +61,11 @@ const ResultsLedger: React.FC<Props> = ({ results, verification }) => {
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                             <span>Total Estate (Net):</span>
-                            <span style={{ fontWeight: 'bold' }}>{totalDistributed.toLocaleString()}</span>
+                            <span style={{ fontWeight: 'bold' }}>{currency} {totalDistributed.toLocaleString()}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                             <span>Total Allocated:</span>
-                            <span style={{ fontWeight: 'bold' }}>{totalDistributed.toLocaleString()}</span>
+                            <span style={{ fontWeight: 'bold' }}>{currency} {totalDistributed.toLocaleString()}</span>
                         </div>
                     </div>
                     <div style={{ borderLeft: '1px solid #ccc', paddingLeft: '2rem' }}>

@@ -1292,3 +1292,271 @@ tr:nth-child(even) {
     padding: 0.5rem 1rem;
   }
 }
+
+/* =============================================
+   Heir Anchor Strip — Jump to Heir Navigation
+   ============================================= */
+
+.heir-anchor-wrapper {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.heir-anchor-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.heir-anchor-label-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.heir-anchor-label-count {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.heir-anchor-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.heir-anchor-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.7rem 0.4rem 0.5rem;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid rgba(var(--pill-color-rgb, 6, 78, 59), 0.2);
+  border-color: color-mix(in srgb, var(--pill-color, #064e3b) 25%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  text-align: left;
+  min-height: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.heir-anchor-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+  background: rgba(255, 252, 245, 0.95);
+  border-color: var(--pill-color, var(--gold));
+}
+
+.heir-anchor-pill.blocked {
+  opacity: 0.5;
+  border-style: dashed;
+  border-color: var(--border);
+  cursor: pointer;
+}
+
+.heir-anchor-pill.blocked:hover {
+  opacity: 0.75;
+  transform: translateY(-1px);
+}
+
+.heir-pill-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.heir-pill-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  line-height: 1.2;
+}
+
+.heir-pill-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+.heir-pill-amount {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.heir-pill-amount.blocked-label {
+  color: var(--error);
+  font-style: italic;
+}
+
+.heir-pill-share {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--secondary);
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 4px;
+  padding: 0.1rem 0.3rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .heir-anchor-strip {
+    gap: 0.4rem;
+  }
+
+  .heir-anchor-pill {
+    padding: 0.35rem 0.55rem 0.35rem 0.45rem;
+  }
+}
+
+/* =============================================
+   Collapsible Math Distribution Card
+   ============================================= */
+
+.math-card-wrapper {
+  border: 1px solid var(--border-elegant);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.math-card-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+  min-height: 0;
+  gap: 1rem;
+  border-radius: 0;
+}
+
+.math-card-trigger:hover {
+  background: #fffcf5;
+}
+
+.math-card-trigger[aria-expanded="true"] {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border-elegant);
+}
+
+.math-card-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--primary);
+}
+
+.math-card-trigger-title {
+  font-family: 'Amiri', serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--primary);
+}
+
+.math-card-trigger-subtitle {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.math-card-trigger-right {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.math-card-toggle-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gold);
+}
+
+/* Collapsible body */
+.math-card-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.math-card-body.open {
+  max-height: 1200px;
+  transition: max-height 0.5s cubic-bezier(0, 0, 0.2, 1);
+}
+
+.math-card-content {
+  padding: 1.25rem 1.5rem 1.5rem;
+  background: #fff;
+}
+
+.math-step-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed var(--border-elegant);
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+}
+
+.math-step-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.math-step-label {
+  color: var(--text-muted);
+  flex: 1;
+}
+
+.math-step-value {
+  font-weight: 700;
+  color: var(--primary);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.math-card-footnote {
+  margin-top: 1rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-style: italic;
+  text-align: center;
+  line-height: 1.6;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-elegant);
+}
+
+@media (max-width: 600px) {
+  .math-card-trigger {
+    padding: 0.75rem 1rem;
+  }
+
+  .math-card-trigger-subtitle {
+    display: none;
+  }
+
+  .math-card-content {
+    padding: 1rem;
+  }
+}

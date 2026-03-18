@@ -3,7 +3,7 @@ import type { CalculationResult, VerificationData, CalculationStep } from '../ty
 import { RotateCcw, ShieldCheck, Printer, Download } from 'lucide-react';
 import ResultsTable from '../components/ResultsTable';
 import VerificationPanel from '../components/VerificationPanel';
-import SummaryOverview from '../components/SummaryOverview';
+import HeirAnchorStrip from '../components/HeirAnchorStrip';
 import ResultsLedger from '../components/ResultsLedger';
 import MathDistributionCard from '../components/MathDistributionCard';
 import DistributionPieChart from '../components/DistributionPieChart';
@@ -17,16 +17,22 @@ interface Props {
 }
 
 const ResultsDisplay: React.FC<Props> = ({ results, calculation_steps, verification, currency = '₹', onBack }) => {
+    // Sort heirs: active heirs by amount descending, blocked heirs last
+    const sortedResults = [...results].sort((a, b) => {
+        if (a.is_blocked && !b.is_blocked) return 1;
+        if (!a.is_blocked && b.is_blocked) return -1;
+        return b.amount - a.amount;
+    });
+
     const handlePrint = () => {
         window.print();
     };
 
     const handleExportExcel = () => {
-        // Detailed CSV export
-        const totalDistributed = results.reduce((acc, curr) => acc + curr.amount, 0);
-        
+        const totalDistributed = sortedResults.reduce((acc, curr) => acc + curr.amount, 0);
+
         const headers = ['Heir Relation', 'Share Percentage', 'Fractional Share', 'Actual Amount', 'Jurisprudence Basis (Arabic)'];
-        const rows = results.map(r => [
+        const rows = sortedResults.map(r => [
             `"${r.relation}"`,
             `"${((r.share_percentage || 0) * 100).toFixed(2)}%"`,
             `"${r.is_blocked ? 'MAHJUB' : r.share}"`,
@@ -62,9 +68,10 @@ const ResultsDisplay: React.FC<Props> = ({ results, calculation_steps, verificat
 
     return (
         <div className="animate-fade">
-            <ResultsLedger results={results} verification={verification} />
-            
+            <ResultsLedger results={sortedResults} verification={verification} currency={currency} />
+
             <div className="printable-area">
+                {/* Page statement header */}
                 <div className="page-statement no-print" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', marginBottom: '1.5rem' }}>
                     <h2 className="serif mb-0" style={{ fontFamily: "'Amiri', serif", fontSize: '1.7rem', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }} dir="rtl">
                         <ShieldCheck size={26} color="var(--primary)" />
@@ -78,6 +85,7 @@ const ResultsDisplay: React.FC<Props> = ({ results, calculation_steps, verificat
                     </p>
                 </div>
 
+                {/* Action buttons */}
                 <div className="flex gap-2 mb-4 justify-end no-print">
                     <button className="btn-outline flex items-center gap-2" onClick={handlePrint} style={{ fontSize: '0.85rem' }}>
                         <Printer size={16} /> Print Official Ledger
@@ -88,19 +96,24 @@ const ResultsDisplay: React.FC<Props> = ({ results, calculation_steps, verificat
                 </div>
 
                 <div className="no-print">
-                    <DistributionPieChart results={results} currency={currency} />
+                    {/* 1. Distribution overview chart — full picture at a glance */}
+                    <DistributionPieChart results={sortedResults} currency={currency} />
 
-                    <SummaryOverview results={results} currency={currency} />
-                    
-                    <MathDistributionCard steps={calculation_steps} />
+                    {/* 2. Jump-to-heir anchor strip — compact navigation, no data repeat */}
+                    <HeirAnchorStrip results={sortedResults} currency={currency} />
 
-                    <div className="section-title serif mt-4" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+                    {/* 3. Full Distribution Breakdown — the hero section, now moved up */}
+                    <div className="section-title serif" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
                         <span style={{ fontFamily: "'Amiri', serif", fontSize: '1.4rem' }} dir="rtl">تفصيل قسمة الفرائض</span>
                         <span style={{ fontSize: '1rem', opacity: 0.7 }}>Full Distribution Breakdown</span>
                     </div>
 
-                    <ResultsTable results={results} />
+                    <ResultsTable results={sortedResults} currency={currency} />
 
+                    {/* 4. Calculation Proof — collapsed by default, for those who want the working */}
+                    <MathDistributionCard steps={calculation_steps} />
+
+                    {/* 5. Verification Audit */}
                     {verification && <VerificationPanel verification={verification} />}
                 </div>
 

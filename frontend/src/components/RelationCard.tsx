@@ -1,16 +1,21 @@
-import React from 'react';
+import { memo } from 'react';
 import { Plus, Minus } from 'lucide-react';
 
 interface Props {
     relation: string;
     arabic?: string;
+    relation_type: string;
+    generation_level: number;
     count: number;
     max: number;
-    onAdd: () => void;
-    onRemove: () => void;
+    onAdd: (relType: string, genLevel: number) => void;
+    onRemove: (relType: string, genLevel: number) => void;
 }
 
-const RelationCard: React.FC<Props> = ({ relation, arabic, count, max, onAdd, onRemove }) => {
+// ⚡ Bolt: Wrapped in React.memo to prevent unnecessary re-renders when parent HeirSelector state changes
+// Added stable onAdd/onRemove handlers to prevent reference changes
+// Impact: Reduces re-renders of all ~20 RelationCards when a single relation count is updated
+const RelationCard = memo(({ relation, arabic, relation_type, generation_level, count, max, onAdd, onRemove }: Props) => {
     return (
         <div className="heir-card">
             <div className="info">
@@ -28,12 +33,12 @@ const RelationCard: React.FC<Props> = ({ relation, arabic, count, max, onAdd, on
                 <small className="text-muted" style={{ marginTop: '0.2rem' }}>{max > 1 ? `Up to ${max}` : 'Unique relation'}</small>
             </div>
             <div className="count-actions">
-                <button className="btn-icon" disabled={count === 0} onClick={onRemove}><Minus size={14} /></button>
+                <button className="btn-icon" disabled={count === 0} onClick={() => onRemove(relation_type, generation_level)}><Minus size={14} /></button>
                 <span style={{ fontWeight: '800', minWidth: '1.5rem', textAlign: 'center' }}>{count}</span>
-                <button className="btn-icon" disabled={count >= max} onClick={onAdd}><Plus size={14} /></button>
+                <button className="btn-icon" disabled={count >= max} onClick={() => onAdd(relation_type, generation_level)}><Plus size={14} /></button>
             </div>
         </div>
     );
-};
+});
 
 export default RelationCard;

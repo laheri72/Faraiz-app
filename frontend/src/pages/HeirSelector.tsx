@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { HeirInput } from '../types';
 import { User } from 'lucide-react';
@@ -64,7 +64,16 @@ const AVAILABLE_RELATIONS: RelationInfo[] = [
 
 const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) => {
     const [deceasedGender, setDeceasedGender] = useState<'M' | 'F' | null>(currentHeirs.length > 0 ? (currentHeirs.some(h => h.relation_type === 'Husband') ? 'F' : 'M') : null);
-    const [selectedHeirs, setSelectedHeirs] = useState<HeirInput[]>(currentHeirs);
+    const [selectedHeirs, setSelectedHeirsState] = useState<HeirInput[]>(currentHeirs);
+    const selectedHeirsRef = useRef(currentHeirs);
+    const setSelectedHeirs = useCallback((value: React.SetStateAction<HeirInput[]>) => {
+        const nextSelectedHeirs = typeof value === 'function'
+            ? (value as (prevState: HeirInput[]) => HeirInput[])(selectedHeirsRef.current)
+            : value;
+
+        selectedHeirsRef.current = nextSelectedHeirs;
+        setSelectedHeirsState(nextSelectedHeirs);
+    }, []);
     const [toast, setToast] = useState<{ relation: string, arabic?: string, count: number, id: number } | null>(null);
 
     useEffect(() => {
@@ -101,13 +110,16 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
         }
     };
 
-    const handleAdd = (item: RelationInfo) => {
+    const handleAdd = useCallback((relType: string, genLevel: number) => {
+        const item = AVAILABLE_RELATIONS.find(r => r.relation_type === relType && r.generation_level === genLevel);
+        if (!item) return;
+
         triggerHaptic();
-        const existingIndex = selectedHeirs.findIndex(h => h.relation_type === item.relation_type && h.generation_level === item.generation_level);
+        const existingIndex = selectedHeirsRef.current.findIndex(h => h.relation_type === item.relation_type && h.generation_level === item.generation_level);
         let currentCount = 1;
 
         if (existingIndex !== -1) {
-            const newHeirs = [...selectedHeirs];
+            const newHeirs = [...selectedHeirsRef.current];
             if (newHeirs[existingIndex].count < item.max) {
                 newHeirs[existingIndex].count += 1;
                 setSelectedHeirs(newHeirs);
@@ -116,7 +128,7 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
                 currentCount = item.max;
             }
         } else {
-            setSelectedHeirs([...selectedHeirs, {
+            setSelectedHeirs([...selectedHeirsRef.current, {
                 relation: item.relation,
                 relation_type: item.relation_type,
                 lineage: item.lineage,
@@ -126,13 +138,13 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
             }]);
         }
         setToast({ relation: item.relation, arabic: item.arabic, count: currentCount, id: Date.now() });
-    };
+    }, []);
 
-    const handleRemove = (relType: string, genLevel: number) => {
+    const handleRemove = useCallback((relType: string, genLevel: number) => {
         triggerHaptic();
-        const existingIndex = selectedHeirs.findIndex(h => h.relation_type === relType && h.generation_level === genLevel);
+        const existingIndex = selectedHeirsRef.current.findIndex(h => h.relation_type === relType && h.generation_level === genLevel);
         if (existingIndex !== -1) {
-            const newHeirs = [...selectedHeirs];
+            const newHeirs = [...selectedHeirsRef.current];
             let currentCount = 0;
             if (newHeirs[existingIndex].count > 1) {
                 newHeirs[existingIndex].count -= 1;
@@ -146,7 +158,7 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
                 setToast({ relation: item.relation, arabic: item.arabic, count: currentCount, id: Date.now() });
             }
         }
-    };
+    }, []);
 
     const handleClear = (relType: string, genLevel: number) => {
         triggerHaptic();
@@ -162,8 +174,7 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
     };
 
     const handleAuditAdd = (relType: string, genLevel: number) => {
-        const relInfo = AVAILABLE_RELATIONS.find(r => r.relation_type === relType && r.generation_level === genLevel);
-        if (relInfo) handleAdd(relInfo);
+        handleAdd(relType, genLevel);
     };
 
 
@@ -224,10 +235,12 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
                                                 key={`${item.relation_type}_${item.generation_level}`}
                                                 relation={item.relation}
                                                 arabic={item.arabic}
+                                                relation_type={item.relation_type}
+                                                generation_level={item.generation_level}
                                                 count={selected ? selected.count : 0}
                                                 max={item.max}
-                                                onAdd={() => handleAdd(item)}
-                                                onRemove={() => handleRemove(item.relation_type, item.generation_level)}
+                                                onAdd={handleAdd}
+                                                onRemove={handleRemove}
                                             />
                                         );
                                     })}

@@ -64,13 +64,17 @@ const AVAILABLE_RELATIONS: RelationInfo[] = [
 
 const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) => {
     const [deceasedGender, setDeceasedGender] = useState<'M' | 'F' | null>(currentHeirs.length > 0 ? (currentHeirs.some(h => h.relation_type === 'Husband') ? 'F' : 'M') : null);
-    const [selectedHeirs, setSelectedHeirs] = useState<HeirInput[]>(currentHeirs);
-    const selectedHeirsRef = useRef(selectedHeirs);
-    const [toast, setToast] = useState<{ relation: string, arabic?: string, count: number, id: number } | null>(null);
+    const [selectedHeirs, setSelectedHeirsState] = useState<HeirInput[]>(currentHeirs);
+    const selectedHeirsRef = useRef(currentHeirs);
+    const setSelectedHeirs = useCallback((value: React.SetStateAction<HeirInput[]>) => {
+        const nextSelectedHeirs = typeof value === 'function'
+            ? (value as (prevState: HeirInput[]) => HeirInput[])(selectedHeirsRef.current)
+            : value;
 
-    useEffect(() => {
-        selectedHeirsRef.current = selectedHeirs;
-    }, [selectedHeirs]);
+        selectedHeirsRef.current = nextSelectedHeirs;
+        setSelectedHeirsState(nextSelectedHeirs);
+    }, []);
+    const [toast, setToast] = useState<{ relation: string, arabic?: string, count: number, id: number } | null>(null);
 
     useEffect(() => {
         if (toast) {

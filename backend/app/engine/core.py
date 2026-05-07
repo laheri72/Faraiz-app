@@ -370,9 +370,17 @@ class InferenceEngine:
         if rule.slot and rule.slot in self.state.occupied_slots: return False
         results = []
         for logic_type, conditions in rule.conditions.items():
-            curr = [self.operators[c.operator](self._get_fact_value(c), c.value) for c in conditions]
-            if logic_type == "all": results.append(all(curr))
-            elif logic_type == "any": results.append(any(curr))
+            # ⚡ Bolt: Use generator expressions instead of list comprehensions to short-circuit evaluation
+            # Impact: Prevents unnecessary `_get_fact_value` calls when `all` or `any` condition is already determined
+            if logic_type == "all":
+                results.append(all(self.operators[c.operator](self._get_fact_value(c), c.value) for c in conditions))
+            elif logic_type == "any":
+                results.append(any(self.operators[c.operator](self._get_fact_value(c), c.value) for c in conditions))
+
+            # Short-circuit the outer logic: if any 'all' or 'any' group fails, the entire rule fails since the end result is `all(results)`
+            if results and not results[-1]:
+                return False
+
         return all(results) if results else False
 
     def fire_rule(self, rule: Rule):

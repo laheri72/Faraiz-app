@@ -1,0 +1,23 @@
+
+> faraiz-app@1.0.0 dev
+> concurrently "npm run dev:frontend" "npm run dev:backend"
+
+[0]
+[0] > faraiz-app@1.0.0 dev:frontend
+[0] > npm run dev --prefix frontend
+[0]
+[1]
+[1] > faraiz-app@1.0.0 dev:backend
+[1] > cd backend && python -m uvicorn app.main:app --reload --port 8000
+[1]
+[0]
+[0] > frontend@0.0.0 dev
+[0] > vite
+[0]
+[1] /home/jules/.pyenv/versions/3.12.13/bin/python: No module named uvicorn
+[1] npm run dev:backend exited with code 1
+[0]
+[0]   VITE v7.3.1  ready in 302 ms
+[0]
+[0]   ➜  Local:   http://localhost:5173/
+[0]   ➜  Network: use --host to expose

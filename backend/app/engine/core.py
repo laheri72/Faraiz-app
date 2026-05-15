@@ -306,6 +306,8 @@ KNOWLEDGE_BASE: List[Rule] = [
     )
 ]
 
+RULE_MAP: Dict[str, Rule] = {rule.rule_id: rule for rule in KNOWLEDGE_BASE}
+
 class InferenceEngine:
     def __init__(self, state: CaseState):
         self.state = state
@@ -444,7 +446,7 @@ class MathEngine:
         fixed_rules = []
         reduction_rules = []
         for rid in state.fired_rules:
-            rule = next((r for r in KNOWLEDGE_BASE if r.rule_id == rid), None)
+            rule = RULE_MAP.get(rid)
             if not rule: continue
             if rule.category == "blocking":
                 blocking_rules.append(f"{rule.meaning} ({rule.arabic_text})")
@@ -672,7 +674,7 @@ class MathEngine:
             else:
                 my_rules = state.heir_applied_rules.get(rel_type, []).copy()
 
-            my_arabic_reasoning = [rule.arabic_text for rid in my_rules for rule in KNOWLEDGE_BASE if rule.rule_id == rid]
+            my_arabic_reasoning = [RULE_MAP[rid].arabic_text for rid in my_rules if rid in RULE_MAP]
 
             final_results.append(CalculationResult(
                 heir_id=ir.heir_id, relation=ir.relation, share=str(ir.fraction.limit_denominator()), amount=round(float(ir.amount), 2),

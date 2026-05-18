@@ -1,3 +1,6 @@
 ## 2024-05-06 - React referential equality edge case in lists
 **Learning:** Using React.memo on a list item requires modifying its event handlers. If the parent passes inline closures (e.g., `onAdd={() => handleAdd(item)}`), `React.memo` will always fail shallow comparison because the function reference changes every render. The child MUST be refactored to accept generic stable handlers and its own identifiers.
 **Action:** Changed `RelationCard` props to accept identifiers and stable `useCallback` functions.
+## 2024-05-06 - Inference Engine Knowledge Base Lookup Optimization
+**Learning:** In backend `EnginePipeline`, a statically defined list of rules (`KNOWLEDGE_BASE`) was being repeatedly sorted via `sorted(KNOWLEDGE_BASE, key=lambda x: x.priority)` on every execution pass. Furthermore, looking up rules for inference logic and reasoning extraction involved O(N) list comprehensions `next((r for r in KNOWLEDGE_BASE...))`. This resulted in excessive CPU overhead for what should be static constant-time resolution, especially noticeable during deep iterations of inference logic.
+**Action:** Created static `RULE_MAP` dictionary for O(1) lookups by ID and `SORTED_KNOWLEDGE_BASE` for an already sorted list, executing the O(N log N) sort penalty exactly once at module load time rather than during each calculation pipeline execution.

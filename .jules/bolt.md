@@ -1,3 +1,6 @@
 ## 2024-05-06 - React referential equality edge case in lists
 **Learning:** Using React.memo on a list item requires modifying its event handlers. If the parent passes inline closures (e.g., `onAdd={() => handleAdd(item)}`), `React.memo` will always fail shallow comparison because the function reference changes every render. The child MUST be refactored to accept generic stable handlers and its own identifiers.
 **Action:** Changed `RelationCard` props to accept identifiers and stable `useCallback` functions.
+## 2024-05-18 - Missing memoization on complex chart math causes UI jitter
+**Learning:** In React, complex derivations inside functional components (like `buildSlices` running polar coordinates math and multiple `Array.filter`/`reduce` calls) will re-run on *every* local state update. High-frequency state updates like hover interactions (`onMouseEnter`/`onMouseLeave`) cause extreme recalculation overhead if the underlying data datasets aren't memoized with `useMemo`.
+**Action:** Always wrap heavy data transformations and structural chart map derivations in `useMemo` when the component also handles rapid interactive states (like hovered elements) that don't change the underlying data.

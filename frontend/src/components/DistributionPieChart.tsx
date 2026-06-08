@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { CalculationResult } from '../types';
 
 interface Props {
@@ -71,10 +71,12 @@ function buildSlices(results: CalculationResult[]): SliceData[] {
 const DistributionPieChart: React.FC<Props> = ({ results, currency = '₹' }) => {
     const [hovered, setHovered] = useState<number | null>(null);
 
-    const activeResults = results.filter(r => !r.is_blocked);
-    const blockedResults = results.filter(r => r.is_blocked);
-    const totalAmount = results.reduce((s, r) => s + r.amount, 0);
-    const slices = buildSlices(results);
+    // ⚡ Bolt: Memoized derived state to prevent recalculation on every hover render
+    // Impact: Prevents array filtering/reducing and complex math in `buildSlices` on every cursor move
+    const activeResults = useMemo(() => results.filter(r => !r.is_blocked), [results]);
+    const blockedResults = useMemo(() => results.filter(r => r.is_blocked), [results]);
+    const totalAmount = useMemo(() => results.reduce((s, r) => s + r.amount, 0), [results]);
+    const slices = useMemo(() => buildSlices(results), [results]);
 
     const CX = 130, CY = 130, R = 100, INNER_R = 58;
     const GAP = 2.5; // gap between slices in degrees

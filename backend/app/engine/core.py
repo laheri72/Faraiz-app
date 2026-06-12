@@ -306,6 +306,9 @@ KNOWLEDGE_BASE: List[Rule] = [
     )
 ]
 
+# ⚡ Bolt: Cache sorted rules so we don't sort KNOWLEDGE_BASE repeatedly on every calculate call
+KNOWLEDGE_BASE_SORTED = sorted(KNOWLEDGE_BASE, key=lambda x: x.priority)
+
 class InferenceEngine:
     def __init__(self, state: CaseState):
         self.state = state
@@ -714,9 +717,12 @@ class EnginePipeline:
         state = CaseState(estate_total=Fraction(estate_value), debts=Fraction(debts), wasiyyah=Fraction(wasiyyah), heirs=heirs)
         state.valid_heirs = heirs
         engine = InferenceEngine(state)
+
+        # ⚡ Bolt: Cache sorted rules instead of sorting them repeatedly in the inference loop
+        # Impact: Reduces calculation overhead by eliminating redundant sorting
         for _ in range(3):
             fired_any = False
-            for rule in sorted(KNOWLEDGE_BASE, key=lambda x: x.priority):
+            for rule in KNOWLEDGE_BASE_SORTED:
                 if rule.rule_id not in state.fired_rules and engine.evaluate_rule(rule):
                     engine.fire_rule(rule)
                     fired_any = True

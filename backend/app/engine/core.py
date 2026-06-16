@@ -368,11 +368,24 @@ class InferenceEngine:
     def evaluate_rule(self, rule: Rule) -> bool:
         if rule.mode != "GLOBAL" and self.state.active_mode != rule.mode: return False
         if rule.slot and rule.slot in self.state.occupied_slots: return False
+
+        # ⚡ Bolt: Add short-circuiting to evaluate_rule to prevent unnecessary fact evaluations
         results = []
         for logic_type, conditions in rule.conditions.items():
-            curr = [self.operators[c.operator](self._get_fact_value(c), c.value) for c in conditions]
-            if logic_type == "all": results.append(all(curr))
-            elif logic_type == "any": results.append(any(curr))
+            if logic_type == "all":
+                res = True
+                for c in conditions:
+                    if not self.operators[c.operator](self._get_fact_value(c), c.value):
+                        res = False
+                        break
+                results.append(res)
+            elif logic_type == "any":
+                res = False
+                for c in conditions:
+                    if self.operators[c.operator](self._get_fact_value(c), c.value):
+                        res = True
+                        break
+                results.append(res)
         return all(results) if results else False
 
     def fire_rule(self, rule: Rule):
@@ -714,9 +727,13 @@ class EnginePipeline:
         state = CaseState(estate_total=Fraction(estate_value), debts=Fraction(debts), wasiyyah=Fraction(wasiyyah), heirs=heirs)
         state.valid_heirs = heirs
         engine = InferenceEngine(state)
+        # ⚡ Bolt: Pre-sort KNOWLEDGE_BASE locally or use global sorted to prevent redundant sorting overhead
+        if not hasattr(self, 'sorted_kb'):
+            self.sorted_kb = sorted(KNOWLEDGE_BASE, key=lambda x: x.priority)
+
         for _ in range(3):
             fired_any = False
-            for rule in sorted(KNOWLEDGE_BASE, key=lambda x: x.priority):
+            for rule in self.sorted_kb:
                 if rule.rule_id not in state.fired_rules and engine.evaluate_rule(rule):
                     engine.fire_rule(rule)
                     fired_any = True

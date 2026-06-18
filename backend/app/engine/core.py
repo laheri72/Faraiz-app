@@ -306,6 +306,16 @@ KNOWLEDGE_BASE: List[Rule] = [
     )
 ]
 
+# ⚡ Bolt: Performance Optimization
+# Pre-sorting the static KNOWLEDGE_BASE array here at the module level prevents
+# redundant sorting overhead inside the inference engine's evaluation loop.
+# Impact: Reduces calculation time by avoiding O(N log N) sorting per calculation iteration.
+# ⚡ Bolt: Performance Optimization
+# Pre-sorting the static KNOWLEDGE_BASE array here at the module level prevents
+# redundant sorting overhead inside the inference engine's evaluation loop.
+# Impact: Reduces calculation time by avoiding O(N log N) sorting per calculation iteration.
+KNOWLEDGE_BASE_SORTED = sorted(KNOWLEDGE_BASE, key=lambda x: x.priority)
+
 class InferenceEngine:
     def __init__(self, state: CaseState):
         self.state = state
@@ -716,7 +726,7 @@ class EnginePipeline:
         engine = InferenceEngine(state)
         for _ in range(3):
             fired_any = False
-            for rule in sorted(KNOWLEDGE_BASE, key=lambda x: x.priority):
+            for rule in KNOWLEDGE_BASE_SORTED:
                 if rule.rule_id not in state.fired_rules and engine.evaluate_rule(rule):
                     engine.fire_rule(rule)
                     fired_any = True

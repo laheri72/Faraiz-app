@@ -4,6 +4,7 @@ from fractions import Fraction
 from .models import Heir, CaseState, Rule, RuleCondition, RuleAction, IndividualHeir, VerificationData, CalculationResult, BlockingDetail, CalculationStep
 
 # Global Knowledge Base: Defined as data, not code.
+KNOWLEDGE_BASE_SORTED: List[Rule] = []
 KNOWLEDGE_BASE: List[Rule] = [
     # --- LAYER 4: ELIGIBILITY (10-99) ---
     Rule(
@@ -306,6 +307,7 @@ KNOWLEDGE_BASE: List[Rule] = [
     )
 ]
 
+KNOWLEDGE_BASE_SORTED = sorted(KNOWLEDGE_BASE, key=lambda x: x.priority)
 class InferenceEngine:
     def __init__(self, state: CaseState):
         self.state = state
@@ -716,7 +718,7 @@ class EnginePipeline:
         engine = InferenceEngine(state)
         for _ in range(3):
             fired_any = False
-            for rule in sorted(KNOWLEDGE_BASE, key=lambda x: x.priority):
+            for rule in KNOWLEDGE_BASE_SORTED:
                 if rule.rule_id not in state.fired_rules and engine.evaluate_rule(rule):
                     engine.fire_rule(rule)
                     fired_any = True

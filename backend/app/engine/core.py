@@ -306,6 +306,9 @@ KNOWLEDGE_BASE: List[Rule] = [
     )
 ]
 
+KNOWLEDGE_BASE_SORTED = sorted(KNOWLEDGE_BASE, key=lambda x: x.priority)
+
+
 class InferenceEngine:
     def __init__(self, state: CaseState):
         self.state = state
@@ -716,7 +719,7 @@ class EnginePipeline:
         engine = InferenceEngine(state)
         for _ in range(3):
             fired_any = False
-            for rule in sorted(KNOWLEDGE_BASE, key=lambda x: x.priority):
+            for rule in KNOWLEDGE_BASE_SORTED:
                 if rule.rule_id not in state.fired_rules and engine.evaluate_rule(rule):
                     engine.fire_rule(rule)
                     fired_any = True

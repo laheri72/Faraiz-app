@@ -313,15 +313,24 @@ class InferenceEngine:
             "==": operator.eq, ">=": operator.ge, ">": operator.gt,
             "<": operator.lt, "<=": operator.le, "!=": operator.ne
         }
+        self._raw_counts = {}
+        self._valid_heirs_by_rel = {}
+        for h in state.valid_heirs:
+            self._raw_counts[h.relation_type] = self._raw_counts.get(h.relation_type, 0) + h.count
+            if h.relation_type not in self._valid_heirs_by_rel:
+                self._valid_heirs_by_rel[h.relation_type] = []
+            self._valid_heirs_by_rel[h.relation_type].append(h)
 
     def _get_fact_value(self, condition: RuleCondition) -> Any:
         fact = condition.fact
         rel_type = condition.relation
         def get_count(target_rel_type):
-            return sum(h.count for h in self.state.valid_heirs if h.relation_type == target_rel_type and h.relation_type not in self.state.excluded_relations)
+            if target_rel_type in self.state.excluded_relations:
+                return 0
+            return self._raw_counts.get(target_rel_type, 0)
         
         def get_count_raw(target_rel_type):
-            return sum(h.count for h in self.state.valid_heirs if h.relation_type == target_rel_type)
+            return self._raw_counts.get(target_rel_type, 0)
 
         if fact == "count": return get_count(rel_type)
         if fact == "exists": return get_count(rel_type) > 0
@@ -353,16 +362,22 @@ class InferenceEngine:
                 return any(get_count(r) > 0 for r in p_types)
         if fact == "multiple_generations_descendants":
             desc_types = ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"]
-            present_gens = [h.generation_level for h in self.state.valid_heirs if h.relation_type in desc_types and h.relation_type not in self.state.excluded_relations]
-            if not present_gens: return False
-            return len(set(present_gens)) > 1
+            present_gens = set()
+            for r in desc_types:
+                if r not in self.state.excluded_relations and r in self._valid_heirs_by_rel:
+                    for h in self._valid_heirs_by_rel[r]:
+                        present_gens.add(h.generation_level)
+            return len(present_gens) > 1
         if fact == "class3_proximity_check":
             c3_types = ["Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Daughter_of_Son_of_Brother"]
-            active_c3 = [h for h in self.state.valid_heirs if h.relation_type in c3_types and h.relation_type not in self.state.excluded_relations]
-            if not active_c3: return False
-            return len(set(h.generation_level for h in active_c3)) > 1
+            active_c3_gens = set()
+            for r in c3_types:
+                if r not in self.state.excluded_relations and r in self._valid_heirs_by_rel:
+                    for h in self._valid_heirs_by_rel[r]:
+                        active_c3_gens.add(h.generation_level)
+            return len(active_c3_gens) > 1
         if fact == "total_valid_heirs":
-            return len([h for h in self.state.valid_heirs if h.relation_type not in self.state.excluded_relations])
+            return sum(self._raw_counts.get(r, 0) for r in self._raw_counts if r not in self.state.excluded_relations)
         return None
 
     def evaluate_rule(self, rule: Rule) -> bool:
@@ -387,7 +402,7 @@ class InferenceEngine:
             elif action.type == "procedure_action":
                 if action.value == "subtract_debts": self.state.estate_total -= self.state.debts
                 elif action.value == "apply_wasiyyah_cap":
-                    no_heirs = len([h for h in self.state.valid_heirs if h.relation_type not in self.state.excluded_relations]) == 0
+                    no_heirs = sum(self._raw_counts.get(r, 0) for r in self._raw_counts if r not in self.state.excluded_relations) == 0
                     if no_heirs: actual_will = self.state.wasiyyah
                     else: actual_will = min(self.state.wasiyyah, self.state.estate_total / 3)
                     self.state.estate_total -= actual_will
@@ -397,7 +412,10 @@ class InferenceEngine:
                 add_rule_to_target(action.target)
             elif action.type == "blocking_distant_descendants":
                 desc_types = ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"]
-                active_descendants = [h for h in self.state.valid_heirs if h.relation_type in desc_types and h.relation_type not in self.state.excluded_relations]
+                active_descendants = []
+                for r in desc_types:
+                    if r not in self.state.excluded_relations and r in self._valid_heirs_by_rel:
+                        active_descendants.extend(self._valid_heirs_by_rel[r])
                 if not active_descendants: continue
                 min_gen = min(h.generation_level for h in active_descendants)
                 for h in active_descendants:
@@ -407,7 +425,10 @@ class InferenceEngine:
                         add_rule_to_target(h.relation_type)
             elif action.type == "blocking_distant_class3":
                 c3_types = ["Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Daughter_of_Son_of_Brother"]
-                active_c3 = [h for h in self.state.valid_heirs if h.relation_type in c3_types and h.relation_type not in self.state.excluded_relations]
+                active_c3 = []
+                for r in c3_types:
+                    if r not in self.state.excluded_relations and r in self._valid_heirs_by_rel:
+                        active_c3.extend(self._valid_heirs_by_rel[r])
                 if not active_c3: continue
                 min_gen = min(h.generation_level for h in active_c3)
                 for h in active_c3:

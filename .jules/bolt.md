@@ -1,3 +1,6 @@
 ## 2024-05-06 - React referential equality edge case in lists
 **Learning:** Using React.memo on a list item requires modifying its event handlers. If the parent passes inline closures (e.g., `onAdd={() => handleAdd(item)}`), `React.memo` will always fail shallow comparison because the function reference changes every render. The child MUST be refactored to accept generic stable handlers and its own identifiers.
 **Action:** Changed `RelationCard` props to accept identifiers and stable `useCallback` functions.
+## 2024-05-07 - Python list comprehension overhead in core loop
+**Learning:** In the `InferenceEngine`, checking heir conditions recalculates counts using list comprehensions (`sum(h.count for h in self.state.valid_heirs ...)`) thousands of times during rule evaluation. The correct approach is to cache raw counts in `InferenceEngine.__init__` and combine it with the dynamic `excluded_relations` set for correct behavior, rather than caching on the state model. This removes significant overhead.
+**Action:** Replaced O(N) list comprehensions in `_get_fact_value` with O(1) dictionary lookups (`self._raw_counts` and `self._valid_heirs_by_rel`) initialized once per inference pass, taking care to still dynamically check `self.state.excluded_relations`.

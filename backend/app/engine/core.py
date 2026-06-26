@@ -314,14 +314,26 @@ class InferenceEngine:
             "<": operator.lt, "<=": operator.le, "!=": operator.ne
         }
 
+        # O(N) precomputation for faster rule evaluation
+        self._raw_counts = {}
+        self._valid_heirs_by_rel = {}
+        for h in state.valid_heirs:
+            self._raw_counts[h.relation_type] = self._raw_counts.get(h.relation_type, 0) + h.count
+            if h.relation_type not in self._valid_heirs_by_rel:
+                self._valid_heirs_by_rel[h.relation_type] = []
+            self._valid_heirs_by_rel[h.relation_type].append(h)
+
     def _get_fact_value(self, condition: RuleCondition) -> Any:
         fact = condition.fact
         rel_type = condition.relation
+
         def get_count(target_rel_type):
-            return sum(h.count for h in self.state.valid_heirs if h.relation_type == target_rel_type and h.relation_type not in self.state.excluded_relations)
+            if target_rel_type in self.state.excluded_relations:
+                return 0
+            return self._raw_counts.get(target_rel_type, 0)
         
         def get_count_raw(target_rel_type):
-            return sum(h.count for h in self.state.valid_heirs if h.relation_type == target_rel_type)
+            return self._raw_counts.get(target_rel_type, 0)
 
         if fact == "count": return get_count(rel_type)
         if fact == "exists": return get_count(rel_type) > 0
@@ -353,16 +365,23 @@ class InferenceEngine:
                 return any(get_count(r) > 0 for r in p_types)
         if fact == "multiple_generations_descendants":
             desc_types = ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"]
-            present_gens = [h.generation_level for h in self.state.valid_heirs if h.relation_type in desc_types and h.relation_type not in self.state.excluded_relations]
+            present_gens = []
+            for d_type in desc_types:
+                if d_type not in self.state.excluded_relations and d_type in self._valid_heirs_by_rel:
+                    for h in self._valid_heirs_by_rel[d_type]:
+                        present_gens.append(h.generation_level)
             if not present_gens: return False
             return len(set(present_gens)) > 1
         if fact == "class3_proximity_check":
             c3_types = ["Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Daughter_of_Son_of_Brother"]
-            active_c3 = [h for h in self.state.valid_heirs if h.relation_type in c3_types and h.relation_type not in self.state.excluded_relations]
+            active_c3 = []
+            for c_type in c3_types:
+                if c_type not in self.state.excluded_relations and c_type in self._valid_heirs_by_rel:
+                    active_c3.extend(self._valid_heirs_by_rel[c_type])
             if not active_c3: return False
             return len(set(h.generation_level for h in active_c3)) > 1
         if fact == "total_valid_heirs":
-            return len([h for h in self.state.valid_heirs if h.relation_type not in self.state.excluded_relations])
+            return sum(1 for rel_type, heirs in self._valid_heirs_by_rel.items() if rel_type not in self.state.excluded_relations for h in heirs)
         return None
 
     def evaluate_rule(self, rule: Rule) -> bool:

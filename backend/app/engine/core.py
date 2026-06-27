@@ -306,6 +306,11 @@ KNOWLEDGE_BASE: List[Rule] = [
     )
 ]
 
+
+
+KNOWLEDGE_BASE_SORTED = sorted(KNOWLEDGE_BASE, key=lambda x: x.priority)
+KNOWLEDGE_BASE_DICT = {rule.rule_id: rule for rule in KNOWLEDGE_BASE}
+
 class InferenceEngine:
     def __init__(self, state: CaseState):
         self.state = state
@@ -314,14 +319,26 @@ class InferenceEngine:
             "<": operator.lt, "<=": operator.le, "!=": operator.ne
         }
 
+        # Performance Optimization: O(1) cache for heir counts
+        # This replaces O(N) list comprehensions executed hundreds of times per calculation
+        self._raw_counts = {}
+        self._valid_heirs_by_rel = {}
+        for h in state.valid_heirs:
+            self._raw_counts[h.relation_type] = self._raw_counts.get(h.relation_type, 0) + h.count
+            if h.relation_type not in self._valid_heirs_by_rel:
+                self._valid_heirs_by_rel[h.relation_type] = []
+            self._valid_heirs_by_rel[h.relation_type].append(h)
+
     def _get_fact_value(self, condition: RuleCondition) -> Any:
         fact = condition.fact
         rel_type = condition.relation
         def get_count(target_rel_type):
-            return sum(h.count for h in self.state.valid_heirs if h.relation_type == target_rel_type and h.relation_type not in self.state.excluded_relations)
+            if target_rel_type in self.state.excluded_relations:
+                return 0
+            return self._raw_counts.get(target_rel_type, 0)
         
         def get_count_raw(target_rel_type):
-            return sum(h.count for h in self.state.valid_heirs if h.relation_type == target_rel_type)
+            return self._raw_counts.get(target_rel_type, 0)
 
         if fact == "count": return get_count(rel_type)
         if fact == "exists": return get_count(rel_type) > 0
@@ -353,7 +370,10 @@ class InferenceEngine:
                 return any(get_count(r) > 0 for r in p_types)
         if fact == "multiple_generations_descendants":
             desc_types = ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"]
-            present_gens = [h.generation_level for h in self.state.valid_heirs if h.relation_type in desc_types and h.relation_type not in self.state.excluded_relations]
+            present_gens = []
+            for t in desc_types:
+                if t not in self.state.excluded_relations and t in self._valid_heirs_by_rel:
+                    present_gens.extend(h.generation_level for h in self._valid_heirs_by_rel[t])
             if not present_gens: return False
             return len(set(present_gens)) > 1
         if fact == "class3_proximity_check":
@@ -444,7 +464,7 @@ class MathEngine:
         fixed_rules = []
         reduction_rules = []
         for rid in state.fired_rules:
-            rule = next((r for r in KNOWLEDGE_BASE if r.rule_id == rid), None)
+            rule = KNOWLEDGE_BASE_DICT.get(rid)
             if not rule: continue
             if rule.category == "blocking":
                 blocking_rules.append(f"{rule.meaning} ({rule.arabic_text})")
@@ -672,7 +692,7 @@ class MathEngine:
             else:
                 my_rules = state.heir_applied_rules.get(rel_type, []).copy()
 
-            my_arabic_reasoning = [rule.arabic_text for rid in my_rules for rule in KNOWLEDGE_BASE if rule.rule_id == rid]
+            my_arabic_reasoning = [KNOWLEDGE_BASE_DICT[rid].arabic_text for rid in my_rules if rid in KNOWLEDGE_BASE_DICT]
 
             final_results.append(CalculationResult(
                 heir_id=ir.heir_id, relation=ir.relation, share=str(ir.fraction.limit_denominator()), amount=round(float(ir.amount), 2),
@@ -716,7 +736,7 @@ class EnginePipeline:
         engine = InferenceEngine(state)
         for _ in range(3):
             fired_any = False
-            for rule in sorted(KNOWLEDGE_BASE, key=lambda x: x.priority):
+            for rule in KNOWLEDGE_BASE_SORTED:
                 if rule.rule_id not in state.fired_rules and engine.evaluate_rule(rule):
                     engine.fire_rule(rule)
                     fired_any = True

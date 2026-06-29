@@ -313,15 +313,23 @@ class InferenceEngine:
             "==": operator.eq, ">=": operator.ge, ">": operator.gt,
             "<": operator.lt, "<=": operator.le, "!=": operator.ne
         }
+        # BOLT OPTIMIZATION: O(1) hash map cache to avoid redundant O(N) linear scans
+        # over state.valid_heirs during fact gathering in evaluate_rule.
+        self._raw_counts = {}
+        for h in state.valid_heirs:
+            self._raw_counts[h.relation_type] = self._raw_counts.get(h.relation_type, 0) + h.count
 
     def _get_fact_value(self, condition: RuleCondition) -> Any:
         fact = condition.fact
         rel_type = condition.relation
+
         def get_count(target_rel_type):
-            return sum(h.count for h in self.state.valid_heirs if h.relation_type == target_rel_type and h.relation_type not in self.state.excluded_relations)
+            if target_rel_type in self.state.excluded_relations:
+                return 0
+            return self._raw_counts.get(target_rel_type, 0)
         
         def get_count_raw(target_rel_type):
-            return sum(h.count for h in self.state.valid_heirs if h.relation_type == target_rel_type)
+            return self._raw_counts.get(target_rel_type, 0)
 
         if fact == "count": return get_count(rel_type)
         if fact == "exists": return get_count(rel_type) > 0
@@ -362,7 +370,7 @@ class InferenceEngine:
             if not active_c3: return False
             return len(set(h.generation_level for h in active_c3)) > 1
         if fact == "total_valid_heirs":
-            return len([h for h in self.state.valid_heirs if h.relation_type not in self.state.excluded_relations])
+            return sum(1 for h in self.state.valid_heirs if h.relation_type not in self.state.excluded_relations)
         return None
 
     def evaluate_rule(self, rule: Rule) -> bool:

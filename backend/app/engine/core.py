@@ -306,6 +306,9 @@ KNOWLEDGE_BASE: List[Rule] = [
     )
 ]
 
+KNOWLEDGE_BASE_BY_ID: Dict[str, Rule] = {rule.rule_id: rule for rule in KNOWLEDGE_BASE}
+KNOWLEDGE_BASE_SORTED: List[Rule] = sorted(KNOWLEDGE_BASE, key=lambda x: x.priority)
+
 class InferenceEngine:
     def __init__(self, state: CaseState):
         self.state = state
@@ -444,7 +447,7 @@ class MathEngine:
         fixed_rules = []
         reduction_rules = []
         for rid in state.fired_rules:
-            rule = next((r for r in KNOWLEDGE_BASE if r.rule_id == rid), None)
+            rule = KNOWLEDGE_BASE_BY_ID.get(rid)
             if not rule: continue
             if rule.category == "blocking":
                 blocking_rules.append(f"{rule.meaning} ({rule.arabic_text})")
@@ -672,7 +675,7 @@ class MathEngine:
             else:
                 my_rules = state.heir_applied_rules.get(rel_type, []).copy()
 
-            my_arabic_reasoning = [rule.arabic_text for rid in my_rules for rule in KNOWLEDGE_BASE if rule.rule_id == rid]
+            my_arabic_reasoning = [KNOWLEDGE_BASE_BY_ID[rid].arabic_text for rid in my_rules if rid in KNOWLEDGE_BASE_BY_ID]
 
             final_results.append(CalculationResult(
                 heir_id=ir.heir_id, relation=ir.relation, share=str(ir.fraction.limit_denominator()), amount=round(float(ir.amount), 2),
@@ -716,7 +719,7 @@ class EnginePipeline:
         engine = InferenceEngine(state)
         for _ in range(3):
             fired_any = False
-            for rule in sorted(KNOWLEDGE_BASE, key=lambda x: x.priority):
+            for rule in KNOWLEDGE_BASE_SORTED:
                 if rule.rule_id not in state.fired_rules and engine.evaluate_rule(rule):
                     engine.fire_rule(rule)
                     fired_any = True

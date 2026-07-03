@@ -314,14 +314,21 @@ class InferenceEngine:
             "<": operator.lt, "<=": operator.le, "!=": operator.ne
         }
 
+        # ⚡ Bolt: Cache raw counts in O(1) hash map to avoid redundant O(N) list scans during fact gathering
+        self._raw_counts = {}
+        for h in self.state.valid_heirs:
+            self._raw_counts[h.relation_type] = self._raw_counts.get(h.relation_type, 0) + h.count
+
     def _get_fact_value(self, condition: RuleCondition) -> Any:
         fact = condition.fact
         rel_type = condition.relation
         def get_count(target_rel_type):
-            return sum(h.count for h in self.state.valid_heirs if h.relation_type == target_rel_type and h.relation_type not in self.state.excluded_relations)
+            if target_rel_type in self.state.excluded_relations:
+                return 0
+            return self._raw_counts.get(target_rel_type, 0)
         
         def get_count_raw(target_rel_type):
-            return sum(h.count for h in self.state.valid_heirs if h.relation_type == target_rel_type)
+            return self._raw_counts.get(target_rel_type, 0)
 
         if fact == "count": return get_count(rel_type)
         if fact == "exists": return get_count(rel_type) > 0

@@ -1,3 +1,6 @@
 ## 2024-05-06 - React referential equality edge case in lists
 **Learning:** Using React.memo on a list item requires modifying its event handlers. If the parent passes inline closures (e.g., `onAdd={() => handleAdd(item)}`), `React.memo` will always fail shallow comparison because the function reference changes every render. The child MUST be refactored to accept generic stable handlers and its own identifiers.
 **Action:** Changed `RelationCard` props to accept identifiers and stable `useCallback` functions.
+## 2024-05-06 - Optimizing forward-chaining rules engine loops
+**Learning:** In the inheritance logic inference engine, evaluating dynamic state changes against a static list of valid heirs caused frequent O(N) linear scans during every rule evaluation iteration. Using an O(1) hash map cache (`_raw_counts`) populated once at initialization eliminates these redundant loops. However, we must not dynamically mutate the `CaseState` (e.g. attaching new attributes) since it violates strict Pydantic model schemas. The cache should be safely scoped to the `InferenceEngine` instance, while dynamic variables (like `excluded_relations`) are evaluated against it at runtime.
+**Action:** Changed `get_count` and `get_count_raw` inside `InferenceEngine._get_fact_value()` to use `self._raw_counts` hash map, resulting in O(1) lookups.

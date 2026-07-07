@@ -1,3 +1,6 @@
 ## 2024-05-06 - React referential equality edge case in lists
 **Learning:** Using React.memo on a list item requires modifying its event handlers. If the parent passes inline closures (e.g., `onAdd={() => handleAdd(item)}`), `React.memo` will always fail shallow comparison because the function reference changes every render. The child MUST be refactored to accept generic stable handlers and its own identifiers.
 **Action:** Changed `RelationCard` props to accept identifiers and stable `useCallback` functions.
+## 2025-07-07 - Optimizing InferenceEngine Fact Gathering
+**Learning:** During rule evaluation, `InferenceEngine._get_fact_value()` was performing repeated linear scans (O(N)) over `state.valid_heirs` using `sum()`. For complex cases requiring multiple passes of 100+ rules, this caused significant overhead. Since the heir models are instantiated statically before rule evaluation, caching their raw counts in a hash map (`_raw_counts`) inside `InferenceEngine.__init__` turns these lookups into O(1).
+**Action:** Replaced dynamic `sum(h.count...)` calls with lookups against an internal `_raw_counts` hash dictionary, while continuing to evaluate dynamic logic like `excluded_relations` dynamically against the cache.

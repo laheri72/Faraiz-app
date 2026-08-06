@@ -306,6 +306,10 @@ KNOWLEDGE_BASE: List[Rule] = [
     )
 ]
 
+# Pre-computed static lookups for optimal performance
+KNOWLEDGE_BASE_SORTED: List[Rule] = sorted(KNOWLEDGE_BASE, key=lambda x: x.priority)
+RULE_MAP: Dict[str, Rule] = {r.rule_id: r for r in KNOWLEDGE_BASE}
+
 class InferenceEngine:
     def __init__(self, state: CaseState):
         self.state = state
@@ -313,15 +317,22 @@ class InferenceEngine:
             "==": operator.eq, ">=": operator.ge, ">": operator.gt,
             "<": operator.lt, "<=": operator.le, "!=": operator.ne
         }
+        # Precompute static raw counts for O(1) lookups
+        self._raw_counts_static = {}
+        for h in self.state.valid_heirs:
+            self._raw_counts_static[h.relation_type] = self._raw_counts_static.get(h.relation_type, 0) + h.count
 
     def _get_fact_value(self, condition: RuleCondition) -> Any:
         fact = condition.fact
         rel_type = condition.relation
+        
         def get_count(target_rel_type):
-            return sum(h.count for h in self.state.valid_heirs if h.relation_type == target_rel_type and h.relation_type not in self.state.excluded_relations)
+            if target_rel_type in self.state.excluded_relations:
+                return 0
+            return self._raw_counts_static.get(target_rel_type, 0)
         
         def get_count_raw(target_rel_type):
-            return sum(h.count for h in self.state.valid_heirs if h.relation_type == target_rel_type)
+            return self._raw_counts_static.get(target_rel_type, 0)
 
         if fact == "count": return get_count(rel_type)
         if fact == "exists": return get_count(rel_type) > 0
@@ -362,18 +373,20 @@ class InferenceEngine:
             if not active_c3: return False
             return len(set(h.generation_level for h in active_c3)) > 1
         if fact == "total_valid_heirs":
-            return len([h for h in self.state.valid_heirs if h.relation_type not in self.state.excluded_relations])
+            return sum(1 for h in self.state.valid_heirs if h.relation_type not in self.state.excluded_relations)
         return None
 
     def evaluate_rule(self, rule: Rule) -> bool:
         if rule.mode != "GLOBAL" and self.state.active_mode != rule.mode: return False
         if rule.slot and rule.slot in self.state.occupied_slots: return False
-        results = []
+        if not rule.conditions: return False
         for logic_type, conditions in rule.conditions.items():
-            curr = [self.operators[c.operator](self._get_fact_value(c), c.value) for c in conditions]
-            if logic_type == "all": results.append(all(curr))
-            elif logic_type == "any": results.append(any(curr))
-        return all(results) if results else False
+            cond_gen = (self.operators[c.operator](self._get_fact_value(c), c.value) for c in conditions)
+            if logic_type == "all" and not all(cond_gen):
+                return False
+            elif logic_type == "any" and not any(cond_gen):
+                return False
+        return True
 
     def fire_rule(self, rule: Rule):
         def add_rule_to_target(tgt: str):
@@ -444,7 +457,7 @@ class MathEngine:
         fixed_rules = []
         reduction_rules = []
         for rid in state.fired_rules:
-            rule = next((r for r in KNOWLEDGE_BASE if r.rule_id == rid), None)
+            rule = RULE_MAP.get(rid)
             if not rule: continue
             if rule.category == "blocking":
                 blocking_rules.append(f"{rule.meaning} ({rule.arabic_text})")
@@ -716,7 +729,7 @@ class EnginePipeline:
         engine = InferenceEngine(state)
         for _ in range(3):
             fired_any = False
-            for rule in sorted(KNOWLEDGE_BASE, key=lambda x: x.priority):
+            for rule in KNOWLEDGE_BASE_SORTED:
                 if rule.rule_id not in state.fired_rules and engine.evaluate_rule(rule):
                     engine.fire_rule(rule)
                     fired_any = True

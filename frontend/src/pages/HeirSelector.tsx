@@ -99,10 +99,24 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
         });
     }, [deceasedGender]);
 
-    const categories = useMemo(() => {
-        const cats = Array.from(new Set(filteredRelations.map(r => r.category)));
-        return cats;
+    // ⚡ Bolt: Replace O(n) runtime filtering with pre-computed map O(1)
+    const groupedRelations = useMemo(() => {
+        const map = new Map<string, typeof AVAILABLE_RELATIONS>();
+        filteredRelations.forEach(r => {
+            if (!map.has(r.category)) map.set(r.category, []);
+            map.get(r.category)!.push(r);
+        });
+        return map;
     }, [filteredRelations]);
+
+    // ⚡ Bolt: Replace O(n) array lookup in render with O(1) hash map lookup
+    const selectedHeirsMap = useMemo(() => {
+        const map = new Map<string, HeirInput>();
+        selectedHeirs.forEach(h => {
+            map.set(`${h.relation_type}_${h.generation_level}`, h);
+        });
+        return map;
+    }, [selectedHeirs]);
 
     const triggerHaptic = () => {
         if (window.navigator.vibrate) {
@@ -224,12 +238,12 @@ const HeirSelector: React.FC<Props> = ({ currentHeirs, onBack, onHeirChange }) =
             <div className="heir-selection-grid">
                 <div className="mobile-scroll-container" style={{ maxHeight: '70vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
                     <div className="heir-list-grouped">
-                        {categories.map(cat => (
+                        {Array.from(groupedRelations.keys()).map(cat => (
                             <div key={cat} className="category-section mb-6">
                                 <h3 className="serif text-gold mb-3" style={{ fontSize: '1.1rem', borderBottom: '1px solid var(--border-elegant)', paddingBottom: '0.3rem' }}>{cat}</h3>
                                 <div className="grid gap-3">
-                                    {filteredRelations.filter(r => r.category === cat).map(item => {
-                                        const selected = selectedHeirs.find(h => h.relation_type === item.relation_type && h.generation_level === item.generation_level);
+                                    {groupedRelations.get(cat)!.map(item => {
+                                        const selected = selectedHeirsMap.get(`${item.relation_type}_${item.generation_level}`);
                                         return (
                                             <RelationCard
                                                 key={`${item.relation_type}_${item.generation_level}`}

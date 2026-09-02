@@ -322,46 +322,46 @@ class InferenceEngine:
         for h in self.state.valid_heirs:
             self._raw_counts_static[h.relation_type] = self._raw_counts_static.get(h.relation_type, 0) + h.count
 
+    def _get_count(self, target_rel_type: str) -> int:
+        if target_rel_type in self.state.excluded_relations:
+            return 0
+        return self._raw_counts_static.get(target_rel_type, 0)
+
+    def _get_count_raw(self, target_rel_type: str) -> int:
+        return self._raw_counts_static.get(target_rel_type, 0)
+
     def _get_fact_value(self, condition: RuleCondition) -> Any:
         fact = condition.fact
         rel_type = condition.relation
-        
-        def get_count(target_rel_type):
-            if target_rel_type in self.state.excluded_relations:
-                return 0
-            return self._raw_counts_static.get(target_rel_type, 0)
-        
-        def get_count_raw(target_rel_type):
-            return self._raw_counts_static.get(target_rel_type, 0)
 
-        if fact == "count": return get_count(rel_type)
-        if fact == "exists": return get_count(rel_type) > 0
+        if fact == "count": return self._get_count(rel_type)
+        if fact == "exists": return self._get_count(rel_type) > 0
         if fact == "exists_gm":
             gm_types = ["grandmother_paternal", "grandmother_maternal", "Grandmother"]
-            return any(get_count(r) > 0 for r in gm_types)
+            return any(self._get_count(r) > 0 for r in gm_types)
         if fact == "has_debts": return self.state.debts > 0
         if fact == "has_wasiyyah": return self.state.wasiyyah > 0
         if fact == "active_mode": return self.state.active_mode
         if fact == "total_brothers_raw":
-            return (get_count_raw("Brother") * 2) + get_count_raw("Sister")
+            return (self._get_count_raw("Brother") * 2) + self._get_count_raw("Sister")
         if fact == "total_maternal_siblings":
-            return get_count("Brother_Maternal") + get_count("Sister_Maternal")
+            return self._get_count("Brother_Maternal") + self._get_count("Sister_Maternal")
         if fact == "has_descendants":
-            return any(get_count(r) > 0 for r in ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"])
+            return any(self._get_count(r) > 0 for r in ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"])
         if fact == "has_male_descendants":
-            return any(get_count(r) > 0 for r in ["Son", "Son_of_Son", "Son_of_Son_of_Son"])
+            return any(self._get_count(r) > 0 for r in ["Son", "Son_of_Son", "Son_of_Son_of_Son"])
         if fact == "exists_class":
-            if condition.target_class == "parents": return any(get_count(r) > 0 for r in ["Father", "Mother"])
-            if condition.target_class == "siblings": return any(get_count(r) > 0 for r in ["Brother", "Sister", "Brother_Maternal", "Sister_Maternal", "Son_of_Brother", "grandfather_paternal"])
-            if condition.target_class == "siblings_paternal": return any(get_count(r) > 0 for r in ["Brother", "Sister", "Son_of_Brother", "grandfather_paternal"])
-            if condition.target_class == "siblings_paternal_no_grandfather": return any(get_count(r) > 0 for r in ["Brother", "Sister", "Son_of_Brother"])
-            if condition.target_class == "grandparents": return any(get_count(r) > 0 for r in ["grandfather_paternal", "grandfather_maternal", "grandmother_paternal", "grandmother_maternal", "Grandmother"])
+            if condition.target_class == "parents": return any(self._get_count(r) > 0 for r in ["Father", "Mother"])
+            if condition.target_class == "siblings": return any(self._get_count(r) > 0 for r in ["Brother", "Sister", "Brother_Maternal", "Sister_Maternal", "Son_of_Brother", "grandfather_paternal"])
+            if condition.target_class == "siblings_paternal": return any(self._get_count(r) > 0 for r in ["Brother", "Sister", "Son_of_Brother", "grandfather_paternal"])
+            if condition.target_class == "siblings_paternal_no_grandfather": return any(self._get_count(r) > 0 for r in ["Brother", "Sister", "Son_of_Brother"])
+            if condition.target_class == "grandparents": return any(self._get_count(r) > 0 for r in ["grandfather_paternal", "grandfather_maternal", "grandmother_paternal", "grandmother_maternal", "Grandmother"])
             if condition.target_class == "class3_active":
                 c3_types = ["Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Daughter_of_Son_of_Brother"]
-                return any(get_count(r) > 0 for r in c3_types)
+                return any(self._get_count(r) > 0 for r in c3_types)
             if condition.target_class == "class3_paternal_active":
                 p_types = ["Paternal_Uncle", "Paternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Daughter_of_Son_of_Brother"]
-                return any(get_count(r) > 0 for r in p_types)
+                return any(self._get_count(r) > 0 for r in p_types)
         if fact == "multiple_generations_descendants":
             desc_types = ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"]
             present_gens = [h.generation_level for h in self.state.valid_heirs if h.relation_type in desc_types and h.relation_type not in self.state.excluded_relations]
@@ -388,12 +388,13 @@ class InferenceEngine:
                 return False
         return True
 
+    def _add_rule_to_target(self, tgt: str, rule_id: str):
+        if tgt not in self.state.heir_applied_rules:
+            self.state.heir_applied_rules[tgt] = []
+        if rule_id not in self.state.heir_applied_rules[tgt]:
+            self.state.heir_applied_rules[tgt].append(rule_id)
+
     def fire_rule(self, rule: Rule):
-        def add_rule_to_target(tgt: str):
-            if tgt not in self.state.heir_applied_rules:
-                self.state.heir_applied_rules[tgt] = []
-            if rule.rule_id not in self.state.heir_applied_rules[tgt]:
-                self.state.heir_applied_rules[tgt].append(rule.rule_id)
 
         for action in rule.actions:
             if action.type == "set_mode": self.state.active_mode = action.value
@@ -407,7 +408,7 @@ class InferenceEngine:
             elif action.type == "blocking":
                 self.state.excluded_relations.add(action.target)
                 self.state.blocking_map[action.target] = BlockingDetail(blocked=True, blocked_by="Rule", blocking_rule=rule.rule_id, arabic_text=rule.arabic_text)
-                add_rule_to_target(action.target)
+                self._add_rule_to_target(action.target, rule.rule_id)
             elif action.type == "blocking_distant_descendants":
                 desc_types = ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"]
                 active_descendants = [h for h in self.state.valid_heirs if h.relation_type in desc_types and h.relation_type not in self.state.excluded_relations]
@@ -417,7 +418,7 @@ class InferenceEngine:
                     if h.generation_level > min_gen:
                         self.state.excluded_relations.add(h.relation_type)
                         self.state.blocking_map[h.relation_type] = BlockingDetail(blocked=True, blocked_by="Closer Descendant", blocking_rule=rule.rule_id, arabic_text=rule.arabic_text)
-                        add_rule_to_target(h.relation_type)
+                        self._add_rule_to_target(h.relation_type, rule.rule_id)
             elif action.type == "blocking_distant_class3":
                 c3_types = ["Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Daughter_of_Son_of_Brother"]
                 active_c3 = [h for h in self.state.valid_heirs if h.relation_type in c3_types and h.relation_type not in self.state.excluded_relations]
@@ -427,19 +428,29 @@ class InferenceEngine:
                     if h.generation_level > min_gen:
                         self.state.excluded_relations.add(h.relation_type)
                         self.state.blocking_map[h.relation_type] = BlockingDetail(blocked=True, blocked_by="Proximity", blocking_rule=rule.rule_id, arabic_text=rule.arabic_text)
-                        add_rule_to_target(h.relation_type)
+                        self._add_rule_to_target(h.relation_type, rule.rule_id)
             elif action.type in ["assign_fraction", "set_radd_eligible"]:
                 if action.type == "assign_fraction": self.state.assigned_fractions[action.target] = Fraction(action.value)
                 if action.radd_eligible: self.state.radd_pool.add(action.target)
-                if action.target: add_rule_to_target(action.target)
+                if action.target: self._add_rule_to_target(action.target, rule.rule_id)
             elif action.type == "assign_remainder":
                 self.state.remainder_sink = action.target
                 if action.radd_eligible: self.state.radd_pool.add(action.target)
-                if action.target: add_rule_to_target(action.target)
+                if action.target: self._add_rule_to_target(action.target, rule.rule_id)
         if rule.slot: self.state.occupied_slots.add(rule.slot)
         self.state.fired_rules.append(rule.rule_id)
 
 class MathEngine:
+    @classmethod
+    def _propagate_pool_rules(cls, state: CaseState, pool_name: str, target_relations: List[str]):
+        if pool_name in state.heir_applied_rules:
+            for r in target_relations:
+                if r not in state.heir_applied_rules:
+                    state.heir_applied_rules[r] = []
+                for rid in state.heir_applied_rules[pool_name]:
+                    if rid not in state.heir_applied_rules[r]:
+                        state.heir_applied_rules[r].append(rid)
+
     @staticmethod
     def resolve(state: CaseState) -> Dict[str, Any]:
         steps = []
@@ -554,23 +565,15 @@ class MathEngine:
         steps.append(CalculationStep(title="3. MATHEMATICAL DISTRIBUTION", description="Step-by-step computation of shares:", items=math_items))
 
         # Propagate Pool Rules
-        def propagate_pool_rules(pool_name: str, target_relations: List[str]):
-            if pool_name in state.heir_applied_rules:
-                for r in target_relations:
-                    if r not in state.heir_applied_rules:
-                        state.heir_applied_rules[r] = []
-                    for rid in state.heir_applied_rules[pool_name]:
-                        if rid not in state.heir_applied_rules[r]:
-                            state.heir_applied_rules[r].append(rid)
 
-        propagate_pool_rules("Descendants_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"]])
-        propagate_pool_rules("Siblings_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Brother", "Sister", "grandfather_paternal", "grandmother_paternal", "Son_of_Brother"]])
-        propagate_pool_rules("Maternal_Siblings_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Brother_Maternal", "Sister_Maternal"]])
-        propagate_pool_rules("Paternal_Grandparents_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["grandfather_paternal", "grandmother_paternal"]])
-        propagate_pool_rules("Maternal_Grandparents_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["grandfather_maternal", "grandmother_maternal"]])
-        propagate_pool_rules("Maternal_Uncles_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Maternal_Uncle", "Maternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Son_of_maternal_uncle", "Son_of_aunt"]])
-        propagate_pool_rules("Paternal_Uncles_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Paternal_Uncle", "Paternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Brother", "Daughter_of_Son_of_Brother", "Daughter_of_uncle"]])
-        propagate_pool_rules("Grandmother_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["grandmother_paternal", "grandmother_maternal", "Grandmother"]])
+        MathEngine._propagate_pool_rules(state, "Descendants_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"]])
+        MathEngine._propagate_pool_rules(state, "Siblings_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Brother", "Sister", "grandfather_paternal", "grandmother_paternal", "Son_of_Brother"]])
+        MathEngine._propagate_pool_rules(state, "Maternal_Siblings_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Brother_Maternal", "Sister_Maternal"]])
+        MathEngine._propagate_pool_rules(state, "Paternal_Grandparents_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["grandfather_paternal", "grandmother_paternal"]])
+        MathEngine._propagate_pool_rules(state, "Maternal_Grandparents_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["grandfather_maternal", "grandmother_maternal"]])
+        MathEngine._propagate_pool_rules(state, "Maternal_Uncles_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Maternal_Uncle", "Maternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Son_of_maternal_uncle", "Son_of_aunt"]])
+        MathEngine._propagate_pool_rules(state, "Paternal_Uncles_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["Paternal_Uncle", "Paternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Brother", "Daughter_of_Son_of_Brother", "Daughter_of_uncle"]])
+        MathEngine._propagate_pool_rules(state, "Grandmother_Pool", [h.relation_type for h in state.valid_heirs if h.relation_type in ["grandmother_paternal", "grandmother_maternal", "Grandmother"]])
 
         final_ledger = {}
         for rel, total_share in processed_ledger.items():

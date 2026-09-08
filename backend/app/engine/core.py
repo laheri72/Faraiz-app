@@ -3,7 +3,20 @@ from typing import List, Dict, Any, Optional, Set
 from fractions import Fraction
 from .models import Heir, CaseState, Rule, RuleCondition, RuleAction, IndividualHeir, VerificationData, CalculationResult, BlockingDetail, CalculationStep
 
+# Static set definitions for fast O(1) lookups in hot loops
+GM_TYPES = frozenset({"grandmother_paternal", "grandmother_maternal", "Grandmother"})
+DESC_TYPES = frozenset({"Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"})
+MALE_DESC_TYPES = frozenset({"Son", "Son_of_Son", "Son_of_Son_of_Son"})
+PARENTS_TYPES = frozenset({"Father", "Mother"})
+SIBLINGS_TYPES = frozenset({"Brother", "Sister", "Brother_Maternal", "Sister_Maternal", "Son_of_Brother", "grandfather_paternal"})
+SIBLINGS_PAT_TYPES = frozenset({"Brother", "Sister", "Son_of_Brother", "grandfather_paternal"})
+SIBLINGS_PAT_NO_GP_TYPES = frozenset({"Brother", "Sister", "Son_of_Brother"})
+GP_TYPES = frozenset({"grandfather_paternal", "grandfather_maternal", "grandmother_paternal", "grandmother_maternal", "Grandmother"})
+C3_TYPES = frozenset({"Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Daughter_of_Son_of_Brother"})
+C3_PAT_TYPES = frozenset({"Paternal_Uncle", "Paternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Daughter_of_Son_of_Brother"})
+
 # Global Knowledge Base: Defined as data, not code.
+
 KNOWLEDGE_BASE: List[Rule] = [
     # --- LAYER 4: ELIGIBILITY (10-99) ---
     Rule(
@@ -322,54 +335,49 @@ class InferenceEngine:
         for h in self.state.valid_heirs:
             self._raw_counts_static[h.relation_type] = self._raw_counts_static.get(h.relation_type, 0) + h.count
 
+    def _get_count(self, target_rel_type):
+        if target_rel_type in self.state.excluded_relations:
+            return 0
+        return self._raw_counts_static.get(target_rel_type, 0)
+
+    def _get_count_raw(self, target_rel_type):
+        return self._raw_counts_static.get(target_rel_type, 0)
+
     def _get_fact_value(self, condition: RuleCondition) -> Any:
         fact = condition.fact
         rel_type = condition.relation
         
-        def get_count(target_rel_type):
-            if target_rel_type in self.state.excluded_relations:
-                return 0
-            return self._raw_counts_static.get(target_rel_type, 0)
-        
-        def get_count_raw(target_rel_type):
-            return self._raw_counts_static.get(target_rel_type, 0)
-
-        if fact == "count": return get_count(rel_type)
-        if fact == "exists": return get_count(rel_type) > 0
+        if fact == "count": return self._get_count(rel_type)
+        if fact == "exists": return self._get_count(rel_type) > 0
         if fact == "exists_gm":
-            gm_types = ["grandmother_paternal", "grandmother_maternal", "Grandmother"]
-            return any(get_count(r) > 0 for r in gm_types)
+            return any(self._get_count(r) > 0 for r in GM_TYPES)
         if fact == "has_debts": return self.state.debts > 0
         if fact == "has_wasiyyah": return self.state.wasiyyah > 0
         if fact == "active_mode": return self.state.active_mode
         if fact == "total_brothers_raw":
-            return (get_count_raw("Brother") * 2) + get_count_raw("Sister")
+            return (self._get_count_raw("Brother") * 2) + self._get_count_raw("Sister")
         if fact == "total_maternal_siblings":
-            return get_count("Brother_Maternal") + get_count("Sister_Maternal")
+            return self._get_count("Brother_Maternal") + self._get_count("Sister_Maternal")
         if fact == "has_descendants":
-            return any(get_count(r) > 0 for r in ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"])
+            return any(self._get_count(r) > 0 for r in DESC_TYPES)
         if fact == "has_male_descendants":
-            return any(get_count(r) > 0 for r in ["Son", "Son_of_Son", "Son_of_Son_of_Son"])
+            return any(self._get_count(r) > 0 for r in MALE_DESC_TYPES)
         if fact == "exists_class":
-            if condition.target_class == "parents": return any(get_count(r) > 0 for r in ["Father", "Mother"])
-            if condition.target_class == "siblings": return any(get_count(r) > 0 for r in ["Brother", "Sister", "Brother_Maternal", "Sister_Maternal", "Son_of_Brother", "grandfather_paternal"])
-            if condition.target_class == "siblings_paternal": return any(get_count(r) > 0 for r in ["Brother", "Sister", "Son_of_Brother", "grandfather_paternal"])
-            if condition.target_class == "siblings_paternal_no_grandfather": return any(get_count(r) > 0 for r in ["Brother", "Sister", "Son_of_Brother"])
-            if condition.target_class == "grandparents": return any(get_count(r) > 0 for r in ["grandfather_paternal", "grandfather_maternal", "grandmother_paternal", "grandmother_maternal", "Grandmother"])
+            if condition.target_class == "parents": return any(self._get_count(r) > 0 for r in PARENTS_TYPES)
+            if condition.target_class == "siblings": return any(self._get_count(r) > 0 for r in SIBLINGS_TYPES)
+            if condition.target_class == "siblings_paternal": return any(self._get_count(r) > 0 for r in SIBLINGS_PAT_TYPES)
+            if condition.target_class == "siblings_paternal_no_grandfather": return any(self._get_count(r) > 0 for r in SIBLINGS_PAT_NO_GP_TYPES)
+            if condition.target_class == "grandparents": return any(self._get_count(r) > 0 for r in GP_TYPES)
             if condition.target_class == "class3_active":
-                c3_types = ["Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Daughter_of_Son_of_Brother"]
-                return any(get_count(r) > 0 for r in c3_types)
+                return any(self._get_count(r) > 0 for r in C3_TYPES)
             if condition.target_class == "class3_paternal_active":
-                p_types = ["Paternal_Uncle", "Paternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Daughter_of_Son_of_Brother"]
-                return any(get_count(r) > 0 for r in p_types)
+                return any(self._get_count(r) > 0 for r in C3_PAT_TYPES)
         if fact == "multiple_generations_descendants":
-            desc_types = ["Son", "Daughter", "Son_of_Son", "Daughter_of_Son", "Son_of_Daughter", "Daughter_of_Daughter", "Son_of_Son_of_Son"]
-            present_gens = [h.generation_level for h in self.state.valid_heirs if h.relation_type in desc_types and h.relation_type not in self.state.excluded_relations]
+            present_gens = [h.generation_level for h in self.state.valid_heirs if h.relation_type in DESC_TYPES and h.relation_type not in self.state.excluded_relations]
             if not present_gens: return False
             return len(set(present_gens)) > 1
         if fact == "class3_proximity_check":
-            c3_types = ["Paternal_Uncle", "Paternal_Aunt", "Maternal_Uncle", "Maternal_Aunt", "Son_of_Paternal_Uncle", "Daughter_of_Paternal_Uncle", "Son_of_Paternal_Aunt", "Daughter_of_Paternal_Aunt", "Son_of_Maternal_Uncle", "Daughter_of_Maternal_Uncle", "Son_of_Maternal_Aunt", "Daughter_of_Maternal_Aunt", "Son_of_Sister", "Daughter_of_Son_of_Brother"]
-            active_c3 = [h for h in self.state.valid_heirs if h.relation_type in c3_types and h.relation_type not in self.state.excluded_relations]
+            active_c3 = [h for h in self.state.valid_heirs if h.relation_type in C3_TYPES and h.relation_type not in self.state.excluded_relations]
             if not active_c3: return False
             return len(set(h.generation_level for h in active_c3)) > 1
         if fact == "total_valid_heirs":
@@ -380,12 +388,20 @@ class InferenceEngine:
         if rule.mode != "GLOBAL" and self.state.active_mode != rule.mode: return False
         if rule.slot and rule.slot in self.state.occupied_slots: return False
         if not rule.conditions: return False
+
         for logic_type, conditions in rule.conditions.items():
-            cond_gen = (self.operators[c.operator](self._get_fact_value(c), c.value) for c in conditions)
-            if logic_type == "all" and not all(cond_gen):
-                return False
-            elif logic_type == "any" and not any(cond_gen):
-                return False
+            if logic_type == "all":
+                for c in conditions:
+                    if not self.operators[c.operator](self._get_fact_value(c), c.value):
+                        return False
+            elif logic_type == "any":
+                any_true = False
+                for c in conditions:
+                    if self.operators[c.operator](self._get_fact_value(c), c.value):
+                        any_true = True
+                        break
+                if not any_true:
+                    return False
         return True
 
     def fire_rule(self, rule: Rule):

@@ -349,6 +349,12 @@ class InferenceEngine:
             if rule_id not in self.state.heir_applied_rules[tgt]:
                 self.state.heir_applied_rules[tgt].append(rule_id)
 
+    def _check_any_exists(self, relation_types: Set[str]) -> bool:
+        for r in relation_types:
+            if self._get_count(r) > 0:
+                return True
+        return False
+
     def _get_fact_value(self, condition: RuleCondition) -> Any:
         fact = condition.fact
         rel_type = condition.relation
@@ -356,7 +362,7 @@ class InferenceEngine:
         if fact == "count": return self._get_count(rel_type)
         if fact == "exists": return self._get_count(rel_type) > 0
         if fact == "exists_gm":
-            return any(self._get_count(r) > 0 for r in GM_TYPES)
+            return self._check_any_exists(GM_TYPES)
         if fact == "has_debts": return self.state.debts > 0
         if fact == "has_wasiyyah": return self.state.wasiyyah > 0
         if fact == "active_mode": return self.state.active_mode
@@ -365,19 +371,19 @@ class InferenceEngine:
         if fact == "total_maternal_siblings":
             return self._get_count("Brother_Maternal") + self._get_count("Sister_Maternal")
         if fact == "has_descendants":
-            return any(self._get_count(r) > 0 for r in DESC_TYPES)
+            return self._check_any_exists(DESC_TYPES)
         if fact == "has_male_descendants":
-            return any(self._get_count(r) > 0 for r in MALE_DESC_TYPES)
+            return self._check_any_exists(MALE_DESC_TYPES)
         if fact == "exists_class":
-            if condition.target_class == "parents": return any(self._get_count(r) > 0 for r in PARENTS_TYPES)
-            if condition.target_class == "siblings": return any(self._get_count(r) > 0 for r in SIBLINGS_TYPES)
-            if condition.target_class == "siblings_paternal": return any(self._get_count(r) > 0 for r in SIBLINGS_PAT_TYPES)
-            if condition.target_class == "siblings_paternal_no_grandfather": return any(self._get_count(r) > 0 for r in SIBLINGS_PAT_NO_GP_TYPES)
-            if condition.target_class == "grandparents": return any(self._get_count(r) > 0 for r in GP_TYPES)
+            if condition.target_class == "parents": return self._check_any_exists(PARENTS_TYPES)
+            if condition.target_class == "siblings": return self._check_any_exists(SIBLINGS_TYPES)
+            if condition.target_class == "siblings_paternal": return self._check_any_exists(SIBLINGS_PAT_TYPES)
+            if condition.target_class == "siblings_paternal_no_grandfather": return self._check_any_exists(SIBLINGS_PAT_NO_GP_TYPES)
+            if condition.target_class == "grandparents": return self._check_any_exists(GP_TYPES)
             if condition.target_class == "class3_active":
-                return any(self._get_count(r) > 0 for r in C3_TYPES)
+                return self._check_any_exists(C3_TYPES)
             if condition.target_class == "class3_paternal_active":
-                return any(self._get_count(r) > 0 for r in C3_PAT_TYPES)
+                return self._check_any_exists(C3_PAT_TYPES)
         if fact == "multiple_generations_descendants":
             present_gens = [h.generation_level for h in self.state.valid_heirs if h.relation_type in DESC_TYPES and h.relation_type not in self.state.excluded_relations]
             if not present_gens: return False

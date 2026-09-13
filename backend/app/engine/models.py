@@ -62,24 +62,24 @@ class CaseState(BaseModel):
     debts: Fraction = Field(default=Fraction(0))
     wasiyyah: Fraction = Field(default=Fraction(0))
     heirs: List[Heir]
-    valid_heirs: List[Heir] = []
+    valid_heirs: List[Heir] = Field(default_factory=list)
     active_mode: Optional[str] = None
     
     # Decisions Ledger
-    assigned_fractions: Dict[str, Fraction] = {} # relation -> fraction
-    radd_pool: Set[str] = set() # relations eligible for radd
+    assigned_fractions: Dict[str, Fraction] = Field(default_factory=dict) # relation -> fraction
+    radd_pool: Set[str] = Field(default_factory=set) # relations eligible for radd
     remainder_sink: Optional[str] = None # primary relation to take leftover
-    excluded_relations: Set[str] = set() # relations blocked by proximity or other rules
-    blocking_map: Dict[str, BlockingDetail] = {} # relation -> blocking details
-    virtual_mappings: Dict[str, str] = {} # substituted relations (e.g., Grandson -> Son)
+    excluded_relations: Set[str] = Field(default_factory=set) # relations blocked by proximity or other rules
+    blocking_map: Dict[str, BlockingDetail] = Field(default_factory=dict) # relation -> blocking details
+    virtual_mappings: Dict[str, str] = Field(default_factory=dict) # substituted relations (e.g., Grandson -> Son)
     
     # Verification Ledger
-    individual_results: List[IndividualHeir] = []
+    individual_results: List[IndividualHeir] = Field(default_factory=list)
     
     # Tracking
-    fired_rules: List[str] = []
-    heir_applied_rules: Dict[str, List[str]] = {}
-    occupied_slots: Set[str] = set()
+    fired_rules: List[str] = Field(default_factory=list)
+    heir_applied_rules: Dict[str, List[str]] = Field(default_factory=dict)
+    occupied_slots: Set[str] = Field(default_factory=set)
     
     class Config:
         arbitrary_types_allowed = True
@@ -113,10 +113,10 @@ class CalculationStep(BaseModel):
     title: str
     description: str
     math_details: Optional[str] = None
-    items: List[str] = []
+    items: List[str] = Field(default_factory=list)
 
 class CalculationResponse(BaseModel):
     case_id: int
     results: List[CalculationResult]
     verification: VerificationData
-    calculation_steps: List[CalculationStep] = []
+    calculation_steps: List[CalculationStep] = Field(default_factory=list)

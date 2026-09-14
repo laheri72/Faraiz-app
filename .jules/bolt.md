@@ -8,3 +8,7 @@
 **Learning:** In Python, defining inner functions or dynamically instantiating collections (like `["Son", "Daughter", ...]`) within frequently called methods (hot loops, such as `evaluate_rule`, `_get_fact_value`, `fire_rule`, `resolve`) incurs continuous reallocation overhead and GC pressure. Using generator expressions (`all(...)`) inside these loops also creates significant generator overhead for small collections compared to native `for` loops with early returns.
 **Action:** Extracted dynamic list instantiations to module-level static frozensets (`DESC_TYPES`, `C3_TYPES`, etc.) for O(1) lookups. Extracted inner closure functions into instance and static methods. Refactored `evaluate_rule` to use standard `for` loops with early returns instead of generators.
 
+
+## 2024-05-18 - Pydantic mutable defaults overhead
+**Learning:** In Pydantic models, using mutable default arguments (like `[]`, `{}`, or `set()`) causes significant performance overhead because Pydantic implicitly runs a `copy.deepcopy()` during every single model instantiation. This is particularly slow for classes that are instantiated frequently, like `CaseState`.
+**Action:** Replaced mutable default arguments (e.g. `valid_heirs: List[Heir] = []`) with `Field(default_factory=...)` (e.g. `valid_heirs: List[Heir] = Field(default_factory=list)`) in `backend/app/engine/models.py`. This simple change yielded a measurable speedup (a drop in revalidation test times from ~0.66s to ~0.62s natively, and ~10x speedup in isolated microbenchmarks).
